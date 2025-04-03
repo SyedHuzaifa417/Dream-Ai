@@ -95,3 +95,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+.bg-fixed-pattern {
+  background: black;
+}
+
+.overflowY {
+  overflow-y: auto;
+}
+
+.overflowY::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflowY::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0);
+}
+
+.overflowY::-webkit-scrollbar-thumb {
+  background: rgba(75, 57, 121, 0.4);
+  border-radius: 10px;
+  border: 1px solid rgb(189, 188, 188);
+}
+
+.overflowY::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 57, 121, 0.6);
+}

@@ -20,13 +20,8 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
-        deepAmethyst: "#514287",
-        lavender: "#D9CEFF",
-        charcoal: "#444444",
-        orchid: "#F9ECFF",
-        royalIndigo: "#331180",
-
-        lightborder: "#D9D9D9",
+        "indigo-650": "#5852CB",
+        "purple-920": "#331180",
 
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
