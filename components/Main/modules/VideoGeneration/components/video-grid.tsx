@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Download, Play } from "lucide-react";
-import MasonryGrid from "../../components/MasonryGrid";
+import MasonryGrid from "../../../components/MasonryGrid";
 import { sampleVideos } from "../utlis/Data_tbr";
 
 export default function VideoGrid() {

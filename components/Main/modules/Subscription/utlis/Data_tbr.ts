@@ -4,7 +4,7 @@ export const subscriptionsData = [
     duration: "monthly",
     plan: "basic",
     desc: "For personal use, hobbies, etc.",
-    price: 40,
+    price: 39.99,
     perks: [
       "No more ads",
       "25 images per day",
@@ -17,7 +17,7 @@ export const subscriptionsData = [
     duration: "monthly",
     plan: "standard",
     desc: "For freelancers and small businesses.",
-    price: 80,
+    price: 79.99,
     perks: [
       "No more ads",
       "100 images per day",
@@ -29,9 +29,9 @@ export const subscriptionsData = [
   },
   {
     duration: "monthly",
-    plan: "pro",
-    desc: "For professionals and agencies.",
-    price: 150,
+    plan: "professional",
+    desc: "For Larger creators, Educators, Agencies, Freelancers etc",
+    price: 149.99,
     perks: [
       "No more ads",
       "Unlimited images per day",
@@ -48,7 +48,7 @@ export const subscriptionsData = [
     duration: "weekly",
     plan: "basic",
     desc: "For personal use, hobbies, etc.",
-    price: 15,
+    price: 19.99,
     perks: [
       "No more ads",
       "10 images per day",
@@ -61,7 +61,7 @@ export const subscriptionsData = [
     duration: "weekly",
     plan: "standard",
     desc: "For freelancers and small businesses.",
-    price: 30,
+    price: 29.99,
     perks: [
       "No more ads",
       "50 images per day",
@@ -73,9 +73,9 @@ export const subscriptionsData = [
   },
   {
     duration: "weekly",
-    plan: "pro",
-    desc: "For professionals and agencies.",
-    price: 60,
+    plan: "professional",
+    desc: "For Larger creators, Educators, Agencies, Freelancers etc",
+    price: 59.99,
     perks: [
       "No more ads",
       "Unlimited images per day",
@@ -92,7 +92,7 @@ export const subscriptionsData = [
     duration: "yearly",
     plan: "basic",
     desc: "For personal use, hobbies, etc.",
-    price: 400,
+    price: 399.99,
     perks: [
       "No more ads",
       "30 images per day",
@@ -105,7 +105,7 @@ export const subscriptionsData = [
     duration: "yearly",
     plan: "standard",
     desc: "For freelancers and small businesses.",
-    price: 800,
+    price: 799.99,
     perks: [
       "No more ads",
       "150 images per day",
@@ -117,9 +117,9 @@ export const subscriptionsData = [
   },
   {
     duration: "yearly",
-    plan: "pro",
-    desc: "For professionals and agencies.",
-    price: 1500,
+    plan: "professional",
+    desc: "For Larger creators, Educators, Agencies, Freelancers etc",
+    price: 1499.99,
     perks: [
       "No more ads",
       "Unlimited images per day",

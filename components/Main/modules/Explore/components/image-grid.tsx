@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import MasonryGrid from "../../components/MasonryGrid";
+import MasonryGrid from "../../../components/MasonryGrid";
 import { sampleImages } from "../utlis/Data_tbr";
 
 export default function ImageGrid() {
