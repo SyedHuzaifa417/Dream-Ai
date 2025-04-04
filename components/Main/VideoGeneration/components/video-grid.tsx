@@ -2,53 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Loader2, Play, X } from "lucide-react";
+import { Download, Play } from "lucide-react";
 import MasonryGrid from "../../components/MasonryGrid";
-
-const sampleVideos = [
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
-    title: "Big Buck Bunny",
-  },
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
-    title: "Elephant Dreams",
-  },
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg",
-    title: "Tears of Steel",
-  },
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg",
-    title: "Sintel",
-  },
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/SubaruOutbackOnStreetAndDirt.jpg",
-    title: "Subaru Outback On Street And Dirt",
-  },
-  {
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    thumbnail:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
-    title: "For Bigger Blazes",
-  },
-];
+import { sampleVideos } from "../utlis/Data_tbr";
 
 export default function VideoGrid() {
   const [loading, setLoading] = useState(true);
-  const [videos, setVideos] = useState(sampleVideos);
-  const [playing, setPlaying] = useState<number | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,67 +19,87 @@ export default function VideoGrid() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleVideoClick = (index: number) => {
-    setPlaying(index);
-  };
+  useEffect(() => {
+    videoRefs.current = videoRefs.current.slice(0, sampleVideos.length);
+  }, []);
 
-  const handleCloseVideo = () => {
-    setPlaying(null);
-    if (videoRef.current) {
-      videoRef.current.pause();
+  const handleMouseEnter = (index: number) => {
+    setHoveredIndex(index);
+    const video = videoRefs.current[index];
+    if (video) {
+      video.currentTime = 0;
+      video.play().catch((err) => console.error("Video play failed:", err));
     }
   };
 
-  const videoItems = videos.map((video, index) => (
-    <div key={index} className="relative overflow-hidden rounded-lg group">
+  const handleMouseLeave = (index: number) => {
+    const video = videoRefs.current[index];
+    if (video) {
+      video.pause();
+    }
+    setHoveredIndex(null);
+  };
+
+  const mediaItems = sampleVideos.map((item, index) => {
+    const isHovered = hoveredIndex === index;
+
+    return (
       <div
-        className="relative aspect-video"
-        onClick={() => handleVideoClick(index)}
+        key={index}
+        className="relative overflow-hidden rounded-lg mb-4 group"
+        onMouseEnter={() => handleMouseEnter(index)}
+        onMouseLeave={() => handleMouseLeave(index)}
       >
-        <Image
-          src={video.thumbnail}
-          alt={`Video thumbnail ${index + 1}`}
-          width={800}
-          height={450}
-          className="w-full h-auto object-cover rounded-lg transition-transform group-hover:scale-105"
-          priority={index < 4}
+        <div className="relative">
+          <Image
+            src={item.thumbnailUrl}
+            alt={item.title || `Generated video ${index + 1}`}
+            width={800}
+            height={800}
+            className={`w-full h-auto rounded-lg transition-transform duration-300 group-hover:scale-105 object-cover ${
+              isHovered ? "opacity-0" : "opacity-100"
+            }`}
+          />
+          <div
+            className={`absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ${
+              isHovered ? "" : "opacity-100"
+            }`}
+          >
+            <div className="border-4 border-white rounded-full p-2 flex items-center opacity-50">
+              <Play className="w-8 h-8 text-white " />
+            </div>
+          </div>
+        </div>
+
+        <video
+          ref={(el) => (videoRefs.current[index] = el)}
+          src={item.videoUrl}
+          className={`absolute inset-0 w-full h-full rounded-lg object-cover transition-opacity duration-300 ${
+            isHovered ? "opacity-100" : "opacity-0"
+          }`}
+          playsInline
+          muted
+          loop
+          controls={false}
         />
 
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg cursor-pointer">
-          <div className="bg-black/60 rounded-full p-3">
-            <Play className="w-8 h-8 text-white" />
-          </div>
+        <div
+          className={`absolute left-0 right-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-between gap-4 transition-opacity duration-300 ${
+            isHovered ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <h3 className="text-white font-medium truncate">{item.title}</h3>
+          <button className="text-white hover:text-green-400 transition-colors">
+            <Download className="w-5 h-5" />
+          </button>
         </div>
       </div>
-    </div>
-  ));
+    );
+  });
 
   return (
-    <>
-      <MasonryGrid loading={loading} loadingMessage="Loading amazing videos...">
-        {videoItems}
-      </MasonryGrid>
-
-      {playing !== null && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-4xl">
-            <button
-              onClick={handleCloseVideo}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <video
-              ref={videoRef}
-              src={videos[playing].url}
-              className="w-full rounded-lg"
-              controls
-              autoPlay
-            />
-          </div>
-        </div>
-      )}
-    </>
+    <MasonryGrid loading={loading} loadingMessage="Loading amazing videos...">
+      {mediaItems}
+    </MasonryGrid>
   );
 }

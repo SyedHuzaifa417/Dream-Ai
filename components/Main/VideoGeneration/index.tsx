@@ -8,7 +8,7 @@ export default function VideoPage() {
   return (
     <div className="p-3 h-screen  max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">
       <div className="rounded-[20px] border border-white h-full flex flex-col max-sm:border-none">
-        <div className="p-4 max-sm:p-3">
+        <div className="py-4 px-2 max-sm:p-3">
           <div className="relative">
             <Input
               placeholder="Type a prompt here - Example: waterfall, nature video, cinematic landscape, timelapse video..."
@@ -20,7 +20,7 @@ export default function VideoPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflowY p-6">
+        <div className="flex-1 overflowY mb-3 ">
           <VideoGrid />
         </div>
       </div>

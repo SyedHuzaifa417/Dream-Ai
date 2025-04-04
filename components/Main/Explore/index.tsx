@@ -8,7 +8,7 @@ export default function ExplorePage() {
   return (
     <div className="p-3 h-screen max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">
       <div className="rounded-[20px] border border-white h-full flex flex-col max-sm:border-none">
-        <div className="p-4 max-sm:p-3">
+        <div className="py-4 px-2 max-sm:p-3">
           <div className="relative">
             <Input
               placeholder="Type a prompt here - Example: fantasy world, amazing day view, by going home from school, anime, cinematic shot third person view."

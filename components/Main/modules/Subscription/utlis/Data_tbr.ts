@@ -1,0 +1,133 @@
+export const subscriptionsData = [
+  // Monthly Plans
+  {
+    duration: "monthly",
+    plan: "basic",
+    desc: "For personal use, hobbies, etc.",
+    price: 40,
+    perks: [
+      "No more ads",
+      "25 images per day",
+      "10 minutes of video generation per day",
+      "Limited accelerated image processing",
+      "High-resolution saving",
+    ],
+  },
+  {
+    duration: "monthly",
+    plan: "standard",
+    desc: "For freelancers and small businesses.",
+    price: 80,
+    perks: [
+      "No more ads",
+      "100 images per day",
+      "1 hour of video generation per day",
+      "Faster image processing",
+      "Priority support",
+      "Access to premium templates",
+    ],
+  },
+  {
+    duration: "monthly",
+    plan: "pro",
+    desc: "For professionals and agencies.",
+    price: 150,
+    perks: [
+      "No more ads",
+      "Unlimited images per day",
+      "5 hours of video generation per day",
+      "Ultra-fast processing",
+      "Exclusive AI-generated assets",
+      "Priority support",
+      "Advanced editing tools",
+    ],
+  },
+
+  // Weekly Plans
+  {
+    duration: "weekly",
+    plan: "basic",
+    desc: "For personal use, hobbies, etc.",
+    price: 15,
+    perks: [
+      "No more ads",
+      "10 images per day",
+      "5 minutes of video generation per day",
+      "Limited accelerated image processing",
+      "High-resolution saving",
+    ],
+  },
+  {
+    duration: "weekly",
+    plan: "standard",
+    desc: "For freelancers and small businesses.",
+    price: 30,
+    perks: [
+      "No more ads",
+      "50 images per day",
+      "30 minutes of video generation per day",
+      "Faster image processing",
+      "Priority support",
+      "Access to premium templates",
+    ],
+  },
+  {
+    duration: "weekly",
+    plan: "pro",
+    desc: "For professionals and agencies.",
+    price: 60,
+    perks: [
+      "No more ads",
+      "Unlimited images per day",
+      "3 hours of video generation per day",
+      "Ultra-fast processing",
+      "Exclusive AI-generated assets",
+      "Priority support",
+      "Advanced editing tools",
+    ],
+  },
+
+  // Yearly Plans
+  {
+    duration: "yearly",
+    plan: "basic",
+    desc: "For personal use, hobbies, etc.",
+    price: 400,
+    perks: [
+      "No more ads",
+      "30 images per day",
+      "15 minutes of video generation per day",
+      "Limited accelerated image processing",
+      "High-resolution saving",
+    ],
+  },
+  {
+    duration: "yearly",
+    plan: "standard",
+    desc: "For freelancers and small businesses.",
+    price: 800,
+    perks: [
+      "No more ads",
+      "150 images per day",
+      "2 hours of video generation per day",
+      "Faster image processing",
+      "Priority support",
+      "Access to premium templates",
+    ],
+  },
+  {
+    duration: "yearly",
+    plan: "pro",
+    desc: "For professionals and agencies.",
+    price: 1500,
+    perks: [
+      "No more ads",
+      "Unlimited images per day",
+      "10 hours of video generation per day",
+      "Ultra-fast processing",
+      "Exclusive AI-generated assets",
+      "Priority support",
+      "Advanced editing tools",
+    ],
+  },
+];

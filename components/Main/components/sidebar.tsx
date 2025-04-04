@@ -97,11 +97,11 @@ export default function Sidebar() {
             </Button>
           </Link>
 
-          <Link href="/subscription" className="w-full px-4">
+          <Link href="/subscriptions" className="w-full px-4">
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/subscription" ? "bg-indigo-650" : ""
+                pathname === "/subscriptions" ? "bg-indigo-650" : ""
               }`}
             >
               Subscription
@@ -112,14 +112,14 @@ export default function Sidebar() {
           <div className="w-full border-b" />
 
           <Link
-            href="/video"
+            href="/videos"
             className="w-full px-4"
             onClick={toggleMobileMenu}
           >
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/video" ? "bg-indigo-650" : ""
+                pathname === "/videos" ? "bg-indigo-650" : ""
               }`}
             >
               Video Generation
@@ -220,11 +220,11 @@ export default function Sidebar() {
             </Button>
           </Link>
 
-          <Link href="/subscription" className="w-full px-4">
+          <Link href="/subscriptions" className="w-full px-4">
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/subscription" ? "bg-indigo-650" : ""
+                pathname === "/subscriptions" ? "bg-indigo-650" : ""
               }`}
             >
               Subscription
@@ -234,11 +234,11 @@ export default function Sidebar() {
 
           <div className="w-full border-b" />
 
-          <Link href="/video" className="w-full px-4">
+          <Link href="/videos" className="w-full px-4">
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/video" ? "bg-indigo-650" : ""
+                pathname === "/videos" ? "bg-indigo-650" : ""
               }`}
             >
               Video Generation
