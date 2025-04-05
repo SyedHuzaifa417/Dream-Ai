@@ -97,7 +97,11 @@ export default function Sidebar() {
             </Button>
           </Link>
 
-          <Link href="/subscriptions" className="w-full px-4">
+          <Link
+            href="/subscriptions"
+            className="w-full px-4"
+            onClick={toggleMobileMenu}
+          >
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${

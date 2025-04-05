@@ -8,10 +8,17 @@ import { subscriptionsData } from "../utlis/Data_tbr";
 import { FaCreditCard, FaPaypal, FaApplePay } from "react-icons/fa";
 import clsx from "clsx";
 import { IoIosCheckmark } from "react-icons/io";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const subscriptionFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional(),
   paymentMethod: z.enum(["creditCard", "paypal", "applePay"]),
   cardNumber: z
     .string()
@@ -46,13 +53,10 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     SubscriptionPlan | undefined
   >(initialPlan);
   const [nameEntered, setNameEntered] = useState(false);
-  const [currentDuration, setCurrentDuration] = useState(
-    initialPlan?.duration || "monthly"
-  );
   const [paymentMethodSelected, setPaymentMethodSelected] = useState(false);
 
   const filteredPlans = subscriptionsData.filter(
-    (plan) => plan.duration === currentDuration
+    (plan) => plan.duration === (initialPlan?.duration || "monthly")
   );
 
   const {
@@ -115,7 +119,6 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         data.paymentMethod === "creditCard" ? data.expiryDate : undefined,
       cvc: data.paymentMethod === "creditCard" ? data.cvc : undefined,
     });
-    console.log(data);
   };
 
   const getHeadingText = () => {
@@ -131,14 +134,25 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     }
   };
 
+  const handlePlanChange = (value: string) => {
+    if (value === "unselect") {
+      setSelectedPlan(undefined);
+      return;
+    }
+    const selected = filteredPlans.find((plan) => plan.plan === value);
+    if (selected) {
+      setSelectedPlan(selected);
+    }
+  };
+
   return (
     <div className="w-full p-3">
-      <h3 className="text-3xl max-lg:text-2xl max-sm:text-xl font-semibold text-white text-center capitalize my-10">
+      <h3 className="text-3xl max-lg:text-2xl max-sm:text-xl font-semibold text-white text-center capitalize my-8 max-lg:my-5 max-sm:my-3">
         {getHeadingText()}
       </h3>
       <div className="flex flex-row max-md:flex-col gap-6">
-        <div className=" w-full bg-white p-6 rounded-lg shadow-lg">
-          <div className="flex justify-end items-center mb-6">
+        <div className="w-full bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-end items-center mb-6 max-sm:mb-2">
             <button
               className="text-gray-500 hover:text-gray-800"
               onClick={onClose}
@@ -146,9 +160,48 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
               <RxCross2 />
             </button>
           </div>
-          <div className="flex justify-between items-center">
+
+          <div className="hidden max-lg:block mb-6 max-sm:mb-3">
+            <Select
+              onValueChange={handlePlanChange}
+              value={selectedPlan?.plan || "unselect"}
+            >
+              <SelectTrigger className="w-full border-indigo-650  focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none py-6">
+                <SelectValue placeholder="Select a Plan">
+                  {selectedPlan
+                    ? `${selectedPlan.plan} Package`
+                    : "Select a Plan"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="border-gray-600  w-full">
+                <SelectItem value="unselect" className="w-full">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-sm text-gray-600">Select a Plan</span>
+                  </div>
+                </SelectItem>
+                {filteredPlans.map((plan) => (
+                  <SelectItem
+                    key={plan.plan}
+                    value={plan.plan}
+                    className={clsx(
+                      "w-full py-3 ",
+                      selectedPlan === plan
+                        ? "!bg-indigo-650 !text-white"
+                        : "!bg-white"
+                    )}
+                  >
+                    <span className="text-sm font-semibold capitalize">
+                      {plan.plan} Package
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-between items-center max-lg:flex-col ">
             <form
-              className="space-y-4 w-2/3 pr-24 "
+              className="space-y-4 w-2/3 pr-24 max-lg:w-full max-lg:pr-0 max-lg:max-h-[60vh] overflow-y-auto "
               onSubmit={handleSubmit(processSubmit)}
             >
               <div>
@@ -305,6 +358,20 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                           : "border-indigo-650"
                       }`}
                       placeholder="1234 5678 9012 3456"
+                      inputMode="numeric"
+                      pattern="[0-9\s]+"
+                      onKeyDown={(e) => {
+                        if (
+                          !/[0-9\s]/.test(e.key) &&
+                          e.key !== "Backspace" &&
+                          e.key !== "Delete" &&
+                          e.key !== "ArrowLeft" &&
+                          e.key !== "ArrowRight" &&
+                          e.key !== "Tab"
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
                       {...register("cardNumber")}
                     />
                     {errors.cardNumber && (
@@ -327,6 +394,19 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                             : "border-indigo-650"
                         }`}
                         placeholder="MM/YY"
+                        inputMode="numeric"
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9/]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Delete" &&
+                            e.key !== "ArrowLeft" &&
+                            e.key !== "ArrowRight" &&
+                            e.key !== "Tab"
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
                         {...register("expiryDate")}
                       />
                       {errors.expiryDate && (
@@ -343,6 +423,20 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                           errors.cvc ? "border-red-500" : "border-indigo-650"
                         }`}
                         placeholder="123"
+                        inputMode="numeric"
+                        pattern="[0-9]+"
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Delete" &&
+                            e.key !== "ArrowLeft" &&
+                            e.key !== "ArrowRight" &&
+                            e.key !== "Tab"
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
                         {...register("cvc")}
                       />
                       {errors.cvc && (
@@ -382,7 +476,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                 }`}
                 disabled={!selectedPlan || !paymentMethodSelected}
               >
-                Complete Subscription
+                Pay Now
               </button>
 
               {(!selectedPlan || !paymentMethodSelected) && (
@@ -393,7 +487,8 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                 </p>
               )}
             </form>
-            <div className="w-1/3 max-md:w-full">
+
+            <div className="w-1/3 max-lg:hidden">
               <div className="grid gap-4">
                 {filteredPlans.map((plan) => (
                   <div
@@ -406,7 +501,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                     onClick={() => togglePlanSelection(plan)}
                   >
                     <div className="flex items-center justify-between ">
-                      <h3 className="text-lg font-semibold  capitalize">
+                      <h3 className="text-base font-semibold  capitalize">
                         {plan.plan} Package
                       </h3>
                       <div

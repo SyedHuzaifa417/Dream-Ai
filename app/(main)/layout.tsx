@@ -1,5 +1,3 @@
-"use client";
-
 import Sidebar from "@/components/Main/components/sidebar";
 import "../globals.css";
 import { Inter } from "next/font/google";

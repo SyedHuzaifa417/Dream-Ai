@@ -5,7 +5,10 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Dream AI",
+  title: {
+    default: "Dream AI",
+    template: "Dream AI - %s",
+  },
   description: "AI-powered image and video generation",
 };
 
