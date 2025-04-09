@@ -21,10 +21,22 @@ import { User, Settings } from "lucide-react";
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobilePopoverOpen, setIsMobilePopoverOpen] = useState(false);
+  const [isDesktopPopoverOpen, setIsDesktopPopoverOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleMobilePopoverClose = () => {
+    setIsMobilePopoverOpen(false);
+  };
+
+  const handleLogout = () => {
+    // Handle logout functionality
+    setIsMobilePopoverOpen(false);
+    setIsDesktopPopoverOpen(false);
   };
 
   useEffect(() => {
@@ -194,7 +206,10 @@ export default function Sidebar() {
           </div>
 
           <div className="w-full px-4 mt-auto mb-5 absolute bottom-5 left-0 right-0">
-            <Popover>
+            <Popover
+              open={isMobilePopoverOpen}
+              onOpenChange={setIsMobilePopoverOpen}
+            >
               <PopoverTrigger asChild>
                 <div className="flex items-center justify-center gap-5 py-2 rounded-lg border cursor-pointer hover:bg-indigo-650">
                   <span className="text-base font-medium text-white">
@@ -205,11 +220,14 @@ export default function Sidebar() {
                   </Avatar>
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="w-56 bg-gray-900 border border-gray-800 p-0">
+              <PopoverContent className="w-52 border border-white p-0 bg-inherit hidden max-sm:block">
                 <div className="space-y-1">
                   <Link
                     href="/account"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleMobilePopoverClose();
+                    }}
                   >
                     <Button
                       variant="ghost"
@@ -219,9 +237,11 @@ export default function Sidebar() {
                       Account Settings
                     </Button>
                   </Link>
+                  <div className="border-b border-white my-1" />
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-white hover:bg-indigo-650 hover:text-white rounded-none"
+                    onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-5 w-5" />
                     Logout
@@ -333,7 +353,10 @@ export default function Sidebar() {
         </div>
 
         <div className="w-full px-4 mt-auto mb-5">
-          <Popover>
+          <Popover
+            open={isDesktopPopoverOpen}
+            onOpenChange={setIsDesktopPopoverOpen}
+          >
             <PopoverTrigger asChild>
               <div className="flex items-center justify-center gap-5 py-2 rounded-lg border cursor-pointer hover:bg-indigo-650 ">
                 <span className="text-base font-medium text-white">
@@ -344,21 +367,25 @@ export default function Sidebar() {
                 </Avatar>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-44 border p-0 py-2 bg-inherit  max-sm:hidden">
-              <div className=" flex flex-col items-center justify-center gap-2">
-                <Link href="/account">
+            <PopoverContent className="w-44 border border-white p-0 py-2 bg-inherit max-sm:hidden">
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Link
+                  href="/account"
+                  onClick={() => setIsDesktopPopoverOpen(false)}
+                >
                   <Button
                     variant="ghost"
-                    className="w-full flex justify-start  text-white hover:bg-indigo-650 hover:text-white rounded-none"
+                    className="w-full flex justify-start text-white hover:bg-indigo-650 hover:text-white rounded-none"
                   >
                     <Settings className="mr-2 h-5 w-5" />
                     Account Settings
                   </Button>
                 </Link>
-
+                <div className="border-b border-white w-full" />
                 <Button
                   variant="ghost"
-                  className="w-full flex justify-start  text-white hover:bg-indigo-650 hover:text-white rounded-none"
+                  className="w-full flex justify-start text-white hover:bg-indigo-650 hover:text-white rounded-none"
+                  onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-5 w-5" />
                   Logout
