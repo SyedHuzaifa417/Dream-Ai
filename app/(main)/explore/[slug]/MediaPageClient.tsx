@@ -68,7 +68,7 @@ export default function MediaPageClient({ slug, type }: MediaPageClientProps) {
           <SettingsPanel />
         </div>
 
-        <div className="w-3/4 p-8 flex items-start justify-start max-xl:w-full max-xl:order-2 max-xl:px-4 max-xl:py-4">
+        <div className="w-3/4 p-10 pl-0 flex items-start justify-start max-xl:w-full max-xl:order-2 max-xl:px-4 max-xl:py-4">
           <div className="w-full">
             <div className="relative w-full h-[600px] max-xl:h-[450px] max-sm:h-[400px] self-start">
               <Image

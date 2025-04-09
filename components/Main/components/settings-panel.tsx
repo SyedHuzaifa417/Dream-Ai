@@ -6,13 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { LuRectangleHorizontal, LuRectangleVertical } from "react-icons/lu";
+import { TbRectangle, TbRectangleVertical } from "react-icons/tb";
+import { FaRegSquare } from "react-icons/fa";
 
 export default function SettingsPanel() {
   const [autoTitle, setAutoTitle] = useState(true);
@@ -24,22 +27,14 @@ export default function SettingsPanel() {
   const [selectedAspectRatio, setSelectedAspectRatio] = useState("");
   const [openItem, setOpenItem] = useState();
 
-  const styles = [
-    "Realistic",
-    "Anime",
-    "Cartoon",
-    "Watercolor",
-    "Oil Painting",
-    "Sketch",
-  ];
+  const styles = ["Photo", "Anime", "Graphic", "3D", "Cyberpunk", "Watercolor"];
 
   const aspectRatios = [
-    "1:1 (Square)",
-    "4:3 (Standard)",
-    "16:9 (Widescreen)",
-    "9:16 (Portrait)",
-    "3:2 (Classic)",
-    "2:3 (Portrait Classic)",
+    { option: "Square", icon: <FaRegSquare /> },
+    { option: "Potrait", icon: <TbRectangleVertical /> },
+    { option: "Landscape", icon: <TbRectangle /> },
+    { option: "Wide", icon: <LuRectangleHorizontal /> },
+    { option: "Tall", icon: <LuRectangleVertical /> },
   ];
 
   const handleAccordionChange = (value: any) => {
@@ -47,7 +42,7 @@ export default function SettingsPanel() {
   };
 
   return (
-    <div className="text-white p-4 w-full  space-y-4">
+    <div className="text-white p-4 pr-0 w-full  space-y-4">
       <Accordion
         type="single"
         collapsible
@@ -57,7 +52,7 @@ export default function SettingsPanel() {
       >
         <AccordionItem value="style" className="border-b-0">
           <div className="px-3">
-            <AccordionTrigger className="py-3 hover:no-underline text-base font-semibold w-full">
+            <AccordionTrigger className="py-3 hover:no-underline text-lg font-semibold w-full">
               <span>Choose a Style</span>
             </AccordionTrigger>
           </div>
@@ -84,7 +79,7 @@ export default function SettingsPanel() {
       <div className="space-y-1">
         <div className="flex items-center">
           <Label className="text-sm">Exclude</Label>
-          <span className="h-4 w-4 rounded-full bg-indigo-600 ml-2"></span>
+          <span className="h-4 w-4 rounded-full bg-white ml-2"></span>
         </div>
         <Input
           className="bg-white py-6 text-gray-900 border-gray-700 rounded-md w-full text-sm"
@@ -103,7 +98,7 @@ export default function SettingsPanel() {
       >
         <AccordionItem value="aspect-ratio" className="border-b-0">
           <div className="px-3">
-            <AccordionTrigger className="py-3 hover:no-underline text-base font-semibold w-full ">
+            <AccordionTrigger className="py-3 hover:no-underline text-lg font-semibold w-full ">
               <span>Aspect Ratio</span>
             </AccordionTrigger>
           </div>
@@ -111,15 +106,16 @@ export default function SettingsPanel() {
             <div className="flex flex-col items-start justify-start">
               {aspectRatios.map((ratio) => (
                 <button
-                  key={ratio}
-                  onClick={() => setSelectedAspectRatio(ratio)}
-                  className={`p-3 text-base font-semibold w-full text-start border-t border-black ${
-                    selectedAspectRatio === ratio
+                  key={ratio.option}
+                  onClick={() => setSelectedAspectRatio(ratio.option)}
+                  className={`p-3 text-base font-semibold w-full border-t border-black flex items-center justify-between ${
+                    selectedAspectRatio === ratio.option
                       ? "bg-indigo-650 text-white"
                       : "text-gray-900 hover:bg-indigo-650 hover:text-white"
                   }`}
                 >
-                  {ratio}
+                  <span>{ratio.option}</span>
+                  <span>{ratio.icon}</span>
                 </button>
               ))}
             </div>
