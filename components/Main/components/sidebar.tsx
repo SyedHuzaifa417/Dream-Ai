@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { User, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -100,20 +100,38 @@ export default function Sidebar() {
       >
         <div className="flex flex-col items-center space-y-5 mt-10 h-full">
           <Link
-            href="/explore"
+            href="/videos"
             className="w-full px-4"
             onClick={toggleMobileMenu}
           >
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/explore" ? "bg-indigo-650" : ""
+                pathname === "/videos" ? "bg-indigo-650" : ""
               }`}
             >
-              Explore
+              Video Generation
+              <VscSparkle className="ml-2 w-6 h-6" />
+            </Button>
+          </Link>
+
+          <Link
+            href="/images"
+            className="w-full px-4"
+            onClick={toggleMobileMenu}
+          >
+            <Button
+              variant="ghost"
+              className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
+                pathname === "/images" ? "bg-indigo-650" : ""
+              }`}
+            >
+              Image Generation
               <Search className="ml-2 size-6" />
             </Button>
           </Link>
+
+          <div className="w-full border-b" />
 
           <Link
             href="/subscriptions"
@@ -128,24 +146,6 @@ export default function Sidebar() {
             >
               Subscription
               <LiaCrownSolid className="ml-2 w-6 h-6" />
-            </Button>
-          </Link>
-
-          <div className="w-full border-b" />
-
-          <Link
-            href="/videos"
-            className="w-full px-4"
-            onClick={toggleMobileMenu}
-          >
-            <Button
-              variant="ghost"
-              className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/videos" ? "bg-indigo-650" : ""
-              }`}
-            >
-              Video Generation
-              <VscSparkle className="ml-2 w-6 h-6" />
             </Button>
           </Link>
 
@@ -265,17 +265,31 @@ export default function Sidebar() {
         <div className="border-b border-white mt-5" />
 
         <div className="space-y-5 flex flex-col items-center justify-center mt-6 w-full">
-          <Link href="/explore" className="w-full px-4">
+          <Link href="/videos" className="w-full px-4 ">
             <Button
               variant="ghost"
               className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/explore" ? "bg-indigo-650" : ""
+                pathname === "/videos" ? "bg-indigo-650" : ""
               }`}
             >
-              Explore
+              Video Generation
+              <VscSparkle className="ml-2 w-6 h-6" />
+            </Button>
+          </Link>
+
+          <Link href="/images" className="w-full px-4">
+            <Button
+              variant="ghost"
+              className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
+                pathname === "/images" ? "bg-indigo-650" : ""
+              }`}
+            >
+              Image Generation
               <Search className="ml-2 size-6" />
             </Button>
           </Link>
+
+          <div className="w-full border-b" />
 
           <Link href="/subscriptions" className="w-full px-4">
             <Button
@@ -286,20 +300,6 @@ export default function Sidebar() {
             >
               Subscription
               <LiaCrownSolid className="ml-2 w-6 h-6" />
-            </Button>
-          </Link>
-
-          <div className="w-full border-b" />
-
-          <Link href="/videos" className="w-full px-4">
-            <Button
-              variant="ghost"
-              className={`w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border ${
-                pathname === "/videos" ? "bg-indigo-650" : ""
-              }`}
-            >
-              Video Generation
-              <VscSparkle className="ml-2 w-6 h-6" />
             </Button>
           </Link>
 

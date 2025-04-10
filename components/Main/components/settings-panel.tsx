@@ -16,8 +16,18 @@ import {
 import { LuRectangleHorizontal, LuRectangleVertical } from "react-icons/lu";
 import { TbRectangle, TbRectangleVertical } from "react-icons/tb";
 import { FaRegSquare } from "react-icons/fa";
+import { BsInfo } from "react-icons/bs";
+import { toast } from "sonner";
 
-export default function SettingsPanel() {
+export default function SettingsPanel({
+  type = "image",
+  onGenerate,
+  isPromptValid = true,
+}: {
+  type?: string;
+  onGenerate?: () => void;
+  isPromptValid?: boolean;
+}) {
   const [autoTitle, setAutoTitle] = useState(true);
   const [autoDescription, setAutoDescription] = useState(true);
   const [guidanceScale, setGuidanceScale] = useState(50);
@@ -41,8 +51,22 @@ export default function SettingsPanel() {
     setOpenItem(value === openItem ? null : value);
   };
 
+  const handleGenerate = () => {
+    if (!isPromptValid) {
+      toast.error("Please enter a prompt first", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+      return;
+    }
+
+    if (onGenerate) {
+      onGenerate();
+    }
+  };
+
   return (
-    <div className="text-white p-4 pr-0 w-full  space-y-4">
+    <div className="text-white p-2 w-full  space-y-4">
       <Accordion
         type="single"
         collapsible
@@ -78,8 +102,10 @@ export default function SettingsPanel() {
 
       <div className="space-y-1">
         <div className="flex items-center">
-          <Label className="text-sm">Exclude</Label>
-          <span className="h-4 w-4 rounded-full bg-white ml-2"></span>
+          <Label className="text-sm mr-2">Exclude</Label>
+          <span className="h-4 w-4 rounded-full flex items-center justify-center text-black bg-white ">
+            <BsInfo />
+          </span>
         </div>
         <Input
           className="bg-white py-6 text-gray-900 border-gray-700 rounded-md w-full text-sm"
@@ -168,7 +194,11 @@ export default function SettingsPanel() {
         />
       </div>
 
-      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm uppercase font-medium">
+      <Button
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm uppercase font-medium"
+        onClick={handleGenerate}
+        // disabled={!isPromptValid}
+      >
         Generate
       </Button>
     </div>
