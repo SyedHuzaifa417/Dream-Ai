@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -23,18 +23,20 @@ export default function SettingsPanel({
   type = "image",
   onGenerate,
   isPromptValid = true,
+  onSettingsChange,
 }: {
   type?: string;
   onGenerate?: () => void;
   isPromptValid?: boolean;
+  onSettingsChange?: (settings: any) => void;
 }) {
-  const [autoTitle, setAutoTitle] = useState(true);
-  const [autoDescription, setAutoDescription] = useState(true);
+  const [autoTitle, setAutoTitle] = useState(false);
+  const [autoDescription, setAutoDescription] = useState(false);
   const [guidanceScale, setGuidanceScale] = useState(50);
   const [inferenceSteps, setInferenceSteps] = useState(30);
   const [excludeText, setExcludeText] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("");
-  const [selectedAspectRatio, setSelectedAspectRatio] = useState("");
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState("Square");
   const [openItem, setOpenItem] = useState();
 
   const styles = ["Photo", "Anime", "Graphic", "3D", "Cyberpunk", "Watercolor"];
@@ -47,8 +49,61 @@ export default function SettingsPanel({
     { option: "Tall", icon: <LuRectangleVertical /> },
   ];
 
+  useEffect(() => {
+    const currentSettings = {
+      style: selectedStyle,
+      aspectRatio: selectedAspectRatio,
+      autoTitle,
+      autoDescription,
+      guidanceScale,
+      inferenceSteps,
+      excludeText,
+    };
+
+    if (onSettingsChange) {
+      onSettingsChange(currentSettings);
+    }
+  }, [
+    selectedStyle,
+    selectedAspectRatio,
+    autoTitle,
+    autoDescription,
+    guidanceScale,
+    inferenceSteps,
+    excludeText,
+    onSettingsChange,
+  ]);
+
   const handleAccordionChange = (value: any) => {
     setOpenItem(value === openItem ? null : value);
+  };
+
+  const handleStyleSelect = (style: string) => {
+    setSelectedStyle(style);
+  };
+
+  const handleAspectRatioSelect = (ratio: string) => {
+    setSelectedAspectRatio(ratio);
+  };
+
+  const handleAutoTitleChange = (checked: boolean) => {
+    setAutoTitle(checked);
+  };
+
+  const handleAutoDescriptionChange = (checked: boolean) => {
+    setAutoDescription(checked);
+  };
+
+  const handleGuidanceScaleChange = (value: number[]) => {
+    setGuidanceScale(value[0]);
+  };
+
+  const handleInferenceStepsChange = (value: number[]) => {
+    setInferenceSteps(value[0]);
+  };
+
+  const handleExcludeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setExcludeText(e.target.value);
   };
 
   const handleGenerate = () => {
@@ -59,6 +114,17 @@ export default function SettingsPanel({
       });
       return;
     }
+
+    console.log("Generation settings:", {
+      type,
+      style: selectedStyle,
+      aspectRatio: selectedAspectRatio,
+      autoTitle,
+      autoDescription,
+      guidanceScale,
+      inferenceSteps,
+      excludeText,
+    });
 
     if (onGenerate) {
       onGenerate();
@@ -85,7 +151,7 @@ export default function SettingsPanel({
               {styles.map((style) => (
                 <button
                   key={style}
-                  onClick={() => setSelectedStyle(style)}
+                  onClick={() => handleStyleSelect(style)}
                   className={`p-3 text-base font-semibold w-full text-start border-t border-black ${
                     selectedStyle === style
                       ? "bg-indigo-650 text-white"
@@ -111,7 +177,7 @@ export default function SettingsPanel({
           className="bg-white py-6 text-gray-900 border-gray-700 rounded-md w-full text-sm"
           placeholder="example: adult people"
           value={excludeText}
-          onChange={(e) => setExcludeText(e.target.value)}
+          onChange={handleExcludeChange}
         />
       </div>
 
@@ -133,7 +199,7 @@ export default function SettingsPanel({
               {aspectRatios.map((ratio) => (
                 <button
                   key={ratio.option}
-                  onClick={() => setSelectedAspectRatio(ratio.option)}
+                  onClick={() => handleAspectRatioSelect(ratio.option)}
                   className={`p-3 text-base font-semibold w-full border-t border-black flex items-center justify-between ${
                     selectedAspectRatio === ratio.option
                       ? "bg-indigo-650 text-white"
@@ -156,7 +222,7 @@ export default function SettingsPanel({
         <Switch
           id="auto-title"
           checked={autoTitle}
-          onCheckedChange={setAutoTitle}
+          onCheckedChange={handleAutoTitleChange}
           className="data-[state=checked]:bg-indigo-650 data-[state=unchecked]:bg-white border border-white data-[state=checked]:border-none data-[state=unchecked]:[&>span]:bg-indigo-650"
         />
       </div>
@@ -168,7 +234,7 @@ export default function SettingsPanel({
         <Switch
           id="auto-description"
           checked={autoDescription}
-          onCheckedChange={setAutoDescription}
+          onCheckedChange={handleAutoDescriptionChange}
           className="data-[state=checked]:bg-indigo-650 data-[state=unchecked]:bg-white border border-white data-[state=checked]:border-none data-[state=unchecked]:[&>span]:bg-indigo-650"
         />
       </div>
@@ -177,7 +243,7 @@ export default function SettingsPanel({
         <Label className="text-sm">Guidance Scale</Label>
         <Slider
           value={[guidanceScale]}
-          onValueChange={(value) => setGuidanceScale(value[0])}
+          onValueChange={handleGuidanceScaleChange}
           max={100}
           step={1}
           className="py-2 [&_[data-state=active]]:bg-indigo-600  [&>span>span]:bg-indigo-650 [&>span>button]:border-indigo-650 [&>span>button]:bg-white"
@@ -187,7 +253,7 @@ export default function SettingsPanel({
         <Label className="text-sm">Num Inference Steps</Label>
         <Slider
           value={[inferenceSteps]}
-          onValueChange={(value) => setInferenceSteps(value[0])}
+          onValueChange={handleInferenceStepsChange}
           max={100}
           step={1}
           className="py-2 [&_[data-state=active]]:bg-indigo-600  [&>span>span]:bg-indigo-650 [&>span>button]:border-indigo-650 [&>span>button]:bg-white"

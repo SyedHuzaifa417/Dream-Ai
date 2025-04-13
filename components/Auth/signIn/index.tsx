@@ -4,9 +4,13 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FcGoogle } from "react-icons/fc";
+import { signIn } from "@/lib/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -16,6 +20,9 @@ const signInSchema = z.object({
 type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
+  const router = useRouter();
+  const [rememberMe, setRememberMe] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -25,7 +32,50 @@ export default function SignIn() {
   });
 
   const onSubmit = async (data: SignInForm) => {
-    console.log("Form submitted with:", data);
+    try {
+      const result = await signIn(data.email, data.password);
+
+      if (result.success) {
+        // Save remember me preference if selected
+        if (rememberMe) {
+          localStorage.setItem("rememberEmail", data.email);
+        } else {
+          localStorage.removeItem("rememberEmail");
+        }
+
+        toast.success("Sign in successful!", {
+          position: "bottom-right",
+          duration: 3000,
+        });
+
+        // Redirect to home page after successful login
+        router.push("/");
+      } else {
+        toast.error(result.message || "Failed to sign in", {
+          position: "bottom-right",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast.error("An unexpected error occurred", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      // This would redirect to Google OAuth flow
+      window.location.href = "/api/auth/google";
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Failed to sign in with Google", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
   };
 
   return (
@@ -88,6 +138,8 @@ export default function SignIn() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-indigo-600 rounded border-gray-300"
                 />
                 <label
@@ -113,7 +165,7 @@ export default function SignIn() {
               className="w-full bg-purple-920 hover:bg-purple-900"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Loading..." : "Sign In"}
+              {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
@@ -133,6 +185,8 @@ export default function SignIn() {
               <Button
                 variant="outline"
                 className="flex items-center justify-center gap-2 border border-gray-400"
+                onClick={handleGoogleSignIn}
+                type="button"
               >
                 <FcGoogle className="h-5 w-5" />
                 <span>Sign in with Google</span>

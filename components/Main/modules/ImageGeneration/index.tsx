@@ -4,14 +4,30 @@ import { Input } from "@/components/ui/input";
 import ImageGrid from "@/components/Main/modules/ImageGeneration/components/image-grid";
 import { TbPhoto } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { MediaPageClient } from "../../components/MediaPageClient";
 
 export default function ImagesGenerationPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [settings, setSettings] = useState({
+    style: "",
+    aspectRatio: "Square",
+    autoTitle: false,
+    autoDescription: false,
+    guidanceScale: 50,
+    inferenceSteps: 30,
+    excludeText: "",
+  });
+
+  // Update settings from the settings panel
+  const updateSettings = useCallback((newSettings: any) => {
+    setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
+  }, []);
 
   const handleGenerate = () => {
+    console.log("Generating image with prompt:", prompt);
+    console.log("Image generation settings:", settings);
     setIsGenerating(true);
   };
 
@@ -43,6 +59,7 @@ export default function ImagesGenerationPage() {
               type="image"
               onGenerate={handleGenerate}
               isPromptValid={prompt.trim() !== ""}
+              onSettingsChange={updateSettings}
             />
           </div>
 
@@ -52,6 +69,7 @@ export default function ImagesGenerationPage() {
                 type="image"
                 prompt={prompt}
                 onBack={handleBack}
+                settings={settings}
               />
             ) : (
               <ImageGrid />

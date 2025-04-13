@@ -7,19 +7,31 @@ export interface SubscriptionPlan {
   price: number;
   perks: string[];
   desc: string;
+  id?: string;
 }
 
 interface SubscriptionCardProps {
   plan: SubscriptionPlan;
   onSubscribe: (plan: SubscriptionPlan) => void;
+  isActive?: boolean;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   plan,
   onSubscribe,
+  isActive = false,
 }) => {
   return (
-    <div className="border border-gray-300 rounded-lg p-6 shadow-lg bg-white">
+    <div
+      className={`border ${
+        isActive ? "border-indigo-650 border-2" : "border-gray-300"
+      } rounded-lg p-6 shadow-lg bg-white`}
+    >
+      {isActive && (
+        <div className="bg-indigo-650 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 inline-block">
+          Active Plan
+        </div>
+      )}
       <h3 className="text-xl font-semibold text-purple-920 capitalize my-2">
         {plan.plan} Plan
       </h3>
@@ -35,10 +47,17 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         </span>
       </p>
       <button
-        className="my-4 w-full bg-indigo-650 text-white py-3 text-lg max-lg:text-base rounded-lg hover:bg-blue-700 transition-all capitalize "
-        onClick={() => onSubscribe(plan)}
+        className={`my-4 w-full ${
+          isActive
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-indigo-650 hover:bg-blue-700"
+        } text-white py-3 text-lg max-lg:text-base rounded-lg transition-all capitalize`}
+        onClick={() => !isActive && onSubscribe(plan)}
+        disabled={isActive}
       >
-        Subscribe to {plan.plan === "professional" ? "pro" : plan.plan}
+        {isActive
+          ? "Current Plan"
+          : `Subscribe to ${plan.plan === "professional" ? "pro" : plan.plan}`}
       </button>
       <ul className="mt-4 space-y-5 text-sm text-gray-700">
         {plan.perks.map((perk, index) => (

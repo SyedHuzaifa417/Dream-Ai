@@ -5,13 +5,29 @@ import VideoGrid from "@/components/Main/modules/VideoGeneration/components/vide
 import { TbVideo } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
 import { MediaPageClient } from "../../components/MediaPageClient";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export default function VideoPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [settings, setSettings] = useState({
+    style: "",
+    aspectRatio: "Square",
+    autoTitle: false,
+    autoDescription: false,
+    guidanceScale: 50,
+    inferenceSteps: 30,
+    excludeText: "",
+  });
+
+  // Update settings from the settings panel
+  const updateSettings = useCallback((newSettings: any) => {
+    setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
+  }, []);
 
   const handleGenerate = () => {
+    console.log("Generating video with prompt:", prompt);
+    console.log("Video generation settings:", settings);
     setIsGenerating(true);
   };
 
@@ -42,6 +58,7 @@ export default function VideoPage() {
               type="video"
               onGenerate={handleGenerate}
               isPromptValid={prompt.trim() !== ""}
+              onSettingsChange={updateSettings}
             />
           </div>
           <div className="flex mb-3 w-5/6 max-xl:w-3/4 pt-2 max-lg:w-full max-lg:order-2 items-center justify-center">
@@ -50,6 +67,7 @@ export default function VideoPage() {
                 type="video"
                 onBack={handleBack}
                 prompt={prompt}
+                settings={settings}
               />
             ) : (
               <VideoGrid />

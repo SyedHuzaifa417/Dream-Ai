@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { sampleImages } from "@/components/Main/modules/ImageGeneration/utlis/Data_tbr";
-import { sampleVideos } from "@/components/Main/modules/VideoGeneration/utlis/Data_tbr";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  generateImage,
+  generateVideo,
+  downloadMedia,
+  shareMedia,
+  postMedia,
+} from "@/lib/api";
 
 type MediaData = {
   type: "image" | "video";
@@ -17,45 +23,90 @@ interface MediaPageClientProps {
   onBack?: () => void;
   type: "image" | "video";
   prompt?: string;
+  settings?: {
+    style?: string;
+    aspectRatio?: string;
+    autoTitle?: boolean;
+    autoDescription?: boolean;
+    guidanceScale?: number;
+    inferenceSteps?: number;
+    excludeText?: string;
+  };
 }
 
 export function MediaPageClient({
   type,
   onBack,
   prompt,
+  settings = {},
 }: MediaPageClientProps) {
   const [mediaData, setMediaData] = useState<MediaData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(60);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const generationStarted = useRef(false);
 
-  const loadFallbackMedia = useCallback(() => {
-    if (type === "image") {
-      setMediaData({
-        type: "image",
-        url: sampleImages[0].url,
-        title: sampleImages[0].title || "Generated Image",
-        description:
-          sampleImages[0].description || "Generated image description",
-      });
-    } else if (type === "video") {
-      setMediaData({
-        type: "video",
-        url: sampleVideos[0].thumbnailUrl,
-        title: sampleVideos[0].title || "Generated Video",
+  // Generate media using the API
+  const generateMedia = useCallback(async () => {
+    // Prevent multiple API calls
+    if (generationStarted.current) return;
+    generationStarted.current = true;
+
+    try {
+      let response;
+
+      // Call the generation API based on media type
+      if (type === "image") {
+        response = await generateImage(prompt || "", settings);
+      } else {
+        response = await generateVideo(prompt || "", settings);
+      }
+
+      if (response.success && response.data) {
+        setMediaData({
+          type: type as "image" | "video",
+          url: response.data.url,
+          title: response.data.title,
+          description: response.data.description,
+        });
+
+        toast.success(
+          `${
+            type.charAt(0).toUpperCase() + type.slice(1)
+          } generated successfully!`,
+          {
+            position: "bottom-right",
+            duration: 3000,
+          }
+        );
+      } else {
+        throw new Error(response.error || "Failed to generate media");
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error generating media:", error);
+      setErrorMessage("Failed to generate media. Please try again.");
+      setIsLoading(false);
+      toast.error("Failed to generate media", {
+        position: "bottom-right",
+        duration: 3000,
       });
     }
-
-    setIsLoading(false);
-  }, [type]);
+  }, [type, prompt, settings]);
 
   useEffect(() => {
+    // Reset state when component mounts
+    generationStarted.current = false;
+
+    // Countdown timer to show progress
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          //api call
-          console.log("Using prompt for generation:", prompt);
-          loadFallbackMedia();
+
+          // Call API
+          generateMedia();
           return 0;
         }
         return prev - 1;
@@ -63,12 +114,91 @@ export function MediaPageClient({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [type, loadFallbackMedia, prompt]);
+  }, [generateMedia]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  const handleDownload = async () => {
+    if (!mediaData) return;
+
+    try {
+      const result = await downloadMedia(mediaData.url, type);
+
+      if (result.success) {
+        toast.success(
+          `${type.charAt(0).toUpperCase() + type.slice(1)} downloaded!`,
+          {
+            position: "bottom-right",
+            duration: 3000,
+          }
+        );
+      } else {
+        throw new Error("Download failed");
+      }
+    } catch (error) {
+      console.error("Error downloading media:", error);
+      toast.error(`Failed to download ${type}`, {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (!mediaData) return;
+
+    try {
+      // For now, we are using social as the platform
+      const result = await shareMedia(mediaData.url, "social");
+
+      if (result.success) {
+        toast.success(
+          `${type.charAt(0).toUpperCase() + type.slice(1)} shared!`,
+          {
+            position: "bottom-right",
+            duration: 3000,
+          }
+        );
+      } else {
+        throw new Error("Sharing failed");
+      }
+    } catch (error) {
+      console.error("Error sharing media:", error);
+      toast.error(`Failed to share ${type}`, {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handlePostTo = async () => {
+    if (!mediaData) return;
+
+    try {
+      const result = await postMedia(mediaData.url, type, [
+        "instagram",
+        "twitter",
+      ]);
+
+      if (result.success) {
+        toast.success(`Ready to post ${type}!`, {
+          position: "bottom-right",
+          duration: 3000,
+        });
+      } else {
+        throw new Error("Posting failed");
+      }
+    } catch (error) {
+      console.error("Error posting media:", error);
+      toast.error(`Failed to prepare ${type} for posting`, {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
   };
 
   if (isLoading) {
@@ -82,6 +212,14 @@ export function MediaPageClient({
     );
   }
 
+  if (errorMessage) {
+    return (
+      <div className="flex items-center justify-center h-full mt-10">
+        <p className="text-white text-lg">{errorMessage}</p>
+      </div>
+    );
+  }
+
   if (!mediaData) {
     return (
       <div className="flex items-center justify-center h-full mt-10">
@@ -89,6 +227,7 @@ export function MediaPageClient({
       </div>
     );
   }
+
   return (
     <div className="w-full p-4 pt-0 flex items-start justify-start ">
       <div className="w-full">
@@ -103,13 +242,22 @@ export function MediaPageClient({
           />
         </div>
         <div className="mt-4 text-white space-x-2 w-2/3 flex max-sm:w-full">
-          <Button className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm">
+          <Button
+            className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
+            onClick={handlePostTo}
+          >
             Post To
           </Button>
-          <Button className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm">
+          <Button
+            className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
+            onClick={handleShare}
+          >
             Share
           </Button>
-          <Button className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm">
+          <Button
+            className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
+            onClick={handleDownload}
+          >
             Download
           </Button>
         </div>

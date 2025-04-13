@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SubscriptionPlan } from "./SubscriptionCard";
 import { RxCross2 } from "react-icons/rx";
 import { subscriptionsData } from "../utlis/Data_tbr";
-import { FaCreditCard, FaPaypal, FaApplePay } from "react-icons/fa";
+import { FaCreditCard, FaPaypal, FaApplePay, FaSpinner } from "react-icons/fa";
 import clsx from "clsx";
 import { IoIosCheckmark } from "react-icons/io";
 import {
@@ -42,12 +42,14 @@ interface SubscriptionFormProps {
   plan: SubscriptionPlan | undefined;
   onClose: () => void;
   onSubmit: (data: SubscriptionFormData) => void;
+  isLoading?: boolean;
 }
 
 const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   plan: initialPlan,
   onClose,
   onSubmit,
+  isLoading = false,
 }) => {
   const [selectedPlan, setSelectedPlan] = useState<
     SubscriptionPlan | undefined
@@ -156,6 +158,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             <button
               className="text-gray-500 hover:text-gray-800"
               onClick={onClose}
+              disabled={isLoading}
             >
               <RxCross2 />
             </button>
@@ -165,6 +168,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             <Select
               onValueChange={handlePlanChange}
               value={selectedPlan?.plan || "unselect"}
+              disabled={isLoading}
             >
               <SelectTrigger className="w-full border-indigo-650  focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none py-6">
                 <SelectValue placeholder="Select a Plan">
@@ -214,6 +218,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                     errors.fullName ? "border-red-500" : "border-indigo-650"
                   }`}
                   {...register("fullName")}
+                  disabled={isLoading}
                 />
                 {errors.fullName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -230,6 +235,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                     errors.email ? "border-red-500" : "border-indigo-650"
                   }`}
                   {...register("email")}
+                  disabled={isLoading}
                 />
                 {errors.email && (
                   <p className="text-red-500 text-xs mt-1">
@@ -336,6 +342,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                         type="button"
                         className="text-gray-500 hover:text-red-500"
                         onClick={resetPaymentMethod}
+                        disabled={isLoading}
                       >
                         <RxCross2 />
                       </button>
@@ -469,23 +476,22 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
 
               <button
                 type="submit"
-                className={`w-full py-2 rounded-lg transition-all ${
-                  !selectedPlan || !paymentMethodSelected
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                className={`w-full py-3 rounded-lg text-white font-medium ${
+                  isLoading
+                    ? "bg-indigo-400 cursor-not-allowed"
+                    : "bg-indigo-650 hover:bg-indigo-700"
                 }`}
                 disabled={!selectedPlan || !paymentMethodSelected}
               >
-                Pay Now
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <FaSpinner className="animate-spin mr-2" />
+                    Processing...
+                  </span>
+                ) : (
+                  "Subscribe Now"
+                )}
               </button>
-
-              {(!selectedPlan || !paymentMethodSelected) && (
-                <p className="text-center text-red-500 text-xs">
-                  {!selectedPlan
-                    ? "Please select a plan"
-                    : "Please select a payment method"}
-                </p>
-              )}
             </form>
 
             <div className="w-1/3 max-lg:hidden">
