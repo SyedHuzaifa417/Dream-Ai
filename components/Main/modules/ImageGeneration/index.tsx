@@ -5,7 +5,7 @@ import ImageGrid from "@/components/Main/modules/ImageGeneration/components/imag
 import { TbPhoto } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
 import { useState, useCallback } from "react";
-import { MediaPageClient } from "../../components/MediaPageClient";
+import { MediaPageClient } from "@/components/Main/components/MediaPageClient";
 
 export default function ImagesGenerationPage() {
   const [isGenerating, setIsGenerating] = useState(false);

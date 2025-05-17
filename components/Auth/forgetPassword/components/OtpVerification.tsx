@@ -10,8 +10,6 @@ const formSchema = z.object({
   otp1: z.string().regex(/^[0-9]$/, "Must be a number"),
   otp2: z.string().regex(/^[0-9]$/, "Must be a number"),
   otp3: z.string().regex(/^[0-9]$/, "Must be a number"),
-  otp4: z.string().regex(/^[0-9]$/, "Must be a number"),
-  otp5: z.string().regex(/^[0-9]$/, "Must be a number"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -77,10 +75,10 @@ export function OtpVerification({
       >
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700 my-4 text-center">
-            Enter the 6-digit code sent to {email}
+            Enter the 4-digit code sent to {email}
           </label>
-          <div className="flex justify-between gap-2">
-            {Array.from({ length: 6 }).map((_, index) => {
+          <div className="flex justify-between gap-2 w-2/3 mx-auto">
+            {Array.from({ length: 4 }).map((_, index) => {
               const fieldName = `otp${index}` as OtpField;
               return (
                 <Input
@@ -102,7 +100,7 @@ export function OtpVerification({
                       return;
                     }
 
-                    if (value && index < 5) {
+                    if (value && index < 3) {
                       inputRefs.current[index + 1].focus();
                     }
                     register(fieldName).onChange(e);

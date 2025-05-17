@@ -6,6 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useSignupMutation } from "@/app/services/auth";
 
 const signUpSchema = z
   .object({
@@ -26,16 +29,39 @@ const signUpSchema = z
 type SignUpForm = z.infer<typeof signUpSchema>;
 
 export default function SignUp() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
   });
 
+  const signUpMutation = useSignupMutation();
+  const isSubmitting = signUpMutation.isPending;
+
   const onSubmit = async (data: SignUpForm) => {
-    console.log("Form submitted with:", data);
+    try {
+      await signUpMutation.mutateAsync({
+        email: data.email,
+        name: data.name,
+        password: data.password,
+      });
+
+      toast.success("Account created successfully!", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+
+      router.push("/signin");
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      toast.error(error.response?.data?.message || "Failed to create account", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+    }
   };
 
   return (

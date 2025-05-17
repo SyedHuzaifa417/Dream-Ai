@@ -6,12 +6,7 @@ import SubscriptionCard, {
   SubscriptionPlan,
 } from "./components/SubscriptionCard";
 import SubscriptionForm from "./components/SubscriptionForm";
-import {
-  getSubscriptionPlans,
-  subscribeToPlan,
-  getUserSubscription,
-  UserSubscription,
-} from "@/lib/subscription";
+
 import { toast } from "sonner";
 
 const SubscriptionPage = () => {
@@ -140,7 +135,7 @@ const SubscriptionPage = () => {
       <div className="rounded-[20px] border border-white h-full flex flex-col max-sm:border-none">
         {!showForm ? (
           <>
-            <div className="flex justify-center items-center mx-auto space-x-5 mt-10 max-sm:mt-3 max-lg:mt-5 mb-20 max-sm:mb-3 max-xl:mb-5 p-1 bg-indigo-650 rounded-3xl w-2/4 max-lg:w-[90%] border">
+            <div className="flex justify-center items-center mx-auto space-x-5 mt-10 max-sm:mt-3 max-lg:mt-5 mb-16 max-sm:mb-3 max-xl:mb-5 p-1 bg-indigo-650 rounded-3xl w-2/4 max-lg:w-[90%] border">
               {["weekly", "monthly", "yearly"].map((duration) => (
                 <button
                   key={duration}

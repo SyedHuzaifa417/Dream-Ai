@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from "@/lib/auth";
+import { useLoginMutation } from "@/app/services/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -26,39 +26,36 @@ export default function SignIn() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
   });
 
+  const loginMutation = useLoginMutation();
+  const isSubmitting = loginMutation.isPending;
+
   const onSubmit = async (data: SignInForm) => {
     try {
-      const result = await signIn(data.email, data.password);
+      await loginMutation.mutateAsync({
+        email: data.email,
+        password: data.password,
+      });
 
-      if (result.success) {
-        // Save remember me preference if selected
-        if (rememberMe) {
-          localStorage.setItem("rememberEmail", data.email);
-        } else {
-          localStorage.removeItem("rememberEmail");
-        }
-
-        toast.success("Sign in successful!", {
-          position: "bottom-right",
-          duration: 3000,
-        });
-
-        // Redirect to home page after successful login
-        router.push("/");
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", data.email);
       } else {
-        toast.error(result.message || "Failed to sign in", {
-          position: "bottom-right",
-          duration: 3000,
-        });
+        localStorage.removeItem("rememberEmail");
       }
+
+      toast.success("Sign in successful!", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+      setTimeout(() => {
+        router.push("/videos");
+      }, 3000);
     } catch (error) {
-      console.error("Sign in error:", error);
-      toast.error("An unexpected error occurred", {
+      toast.error("The email or password is incorrect", {
         position: "bottom-right",
         duration: 3000,
       });
@@ -68,7 +65,10 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     try {
       // This would redirect to Google OAuth flow
-      window.location.href = "/api/auth/google";
+      toast.error("Whoops! Something went wrong. Please try again later.", {
+        position: "bottom-right",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Google sign in error:", error);
       toast.error("Failed to sign in with Google", {

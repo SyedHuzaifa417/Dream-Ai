@@ -6,6 +6,7 @@ import { TbVideo } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
 import { MediaPageClient } from "../../components/MediaPageClient";
 import { useState, useCallback } from "react";
+import { useAuth } from "@/app/services/auth";
 
 export default function VideoPage() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -19,21 +20,22 @@ export default function VideoPage() {
     inferenceSteps: 30,
     excludeText: "",
   });
-
+  const { user,isAuthenticated } = useAuth();
   // Update settings from the settings panel
   const updateSettings = useCallback((newSettings: any) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
   }, []);
 
   const handleGenerate = () => {
-    console.log("Generating video with prompt:", prompt);
-    console.log("Video generation settings:", settings);
     setIsGenerating(true);
   };
 
   const handleBack = () => {
     setIsGenerating(false);
   };
+
+  console.log("user", isAuthenticated);
+  console.info(user);
 
   return (
     <div className="p-3 h-screen max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">

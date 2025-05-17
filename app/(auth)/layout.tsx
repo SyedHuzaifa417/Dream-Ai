@@ -1,6 +1,7 @@
 import "../globals.css";
 import { Inter } from "next/font/google";
 import Header from "@/components/Auth/Header";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,6 +13,7 @@ export default function AuthLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+      <Toaster />
         <div className="relative min-h-screen bg-fixed-pattern overflow-hidden">
           <Header />
           <div className="relative z-10 h-[calc(100vh-10rem)] flex items-center justify-center">

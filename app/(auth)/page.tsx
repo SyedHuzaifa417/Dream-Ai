@@ -17,7 +17,7 @@ export default function Home() {
           <Link href="/videos">
             <Button className="bg-purple-920 hover:bg-blue-800 text-white py-8 px-8 max-sm:px-4 rounded-lg text-lg flex items-center justify-center">
               Get Started for Free -
-              <AiOutlineArrowRight className=" w-6 h-6 " />
+              <AiOutlineArrowRight className=" w-6 h-6 mt-1" />
             </Button>
           </Link>
         </div>

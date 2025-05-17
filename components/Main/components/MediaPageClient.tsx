@@ -4,13 +4,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  generateImage,
-  generateVideo,
-  downloadMedia,
-  shareMedia,
-  postMedia,
-} from "@/lib/api";
+import { generateImage, downloadMedia, shareMedia, postMedia } from "@/app/services/media";
 
 type MediaData = {
   type: "image" | "video";
@@ -55,14 +49,25 @@ export function MediaPageClient({
     try {
       let response;
 
-      // Call the generation API based on media type
       if (type === "image") {
-        response = await generateImage(prompt || "", settings);
+        response = await generateImage(prompt, {
+          guidanceScale: settings.guidanceScale,
+          inferenceSteps: settings.inferenceSteps,
+          excludeText: settings.excludeText,
+          autoTitle: settings.autoTitle,
+          autoDescription: settings.autoDescription,
+          style: settings.style,
+          aspectRatio: settings.aspectRatio
+        });
       } else {
-        response = await generateVideo(prompt || "", settings);
+        // Video generation not implemented yet
+        console.log("Video generation not implemented yet");
+        setErrorMessage("Video generation is not implemented yet");
+        setIsLoading(false);
+        return;
       }
 
-      if (response.success && response.data) {
+      if (response && response.success && response.data) {
         setMediaData({
           type: type as "image" | "video",
           url: response.data.url,
@@ -80,7 +85,7 @@ export function MediaPageClient({
           }
         );
       } else {
-        throw new Error(response.error || "Failed to generate media");
+        throw new Error(response?.error || "Failed to generate media");
       }
 
       setIsLoading(false);

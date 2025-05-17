@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
-import { Search, History, HelpCircle, LogOut, Menu, X } from "lucide-react";
+import { Search, History, HelpCircle, LogOut, Menu, X, LogIn } from "lucide-react";
 import { VscSparkle } from "react-icons/vsc";
 import { LiaCrownSolid } from "react-icons/lia";
 import { LuSettings } from "react-icons/lu";
@@ -17,6 +17,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Settings } from "lucide-react";
+import { useAuth } from "@/app/services/auth";
+import { useRouter } from "next/navigation";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -24,6 +26,8 @@ export default function Sidebar() {
   const [isMobilePopoverOpen, setIsMobilePopoverOpen] = useState(false);
   const [isDesktopPopoverOpen, setIsDesktopPopoverOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,7 +38,7 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    // Handle logout functionality
+    logout();
     setIsMobilePopoverOpen(false);
     setIsDesktopPopoverOpen(false);
   };
@@ -195,16 +199,18 @@ export default function Sidebar() {
             </Button>
           </Link>
 
-          <div className="w-full px-4">
-            <Button
-              variant="ghost"
-              className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
-            >
-              Logout
+          {isAuthenticated && (
+            <>
+            <div className="w-full px-4">
+              <Button
+                variant="ghost"
+                className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
+              >
+                Logout
               <LogOut className="ml-2 size-6" />
             </Button>
           </div>
-
+         
           <div className="w-full px-4 mt-auto mb-5 absolute bottom-5 left-0 right-0">
             <Popover
               open={isMobilePopoverOpen}
@@ -213,14 +219,14 @@ export default function Sidebar() {
               <PopoverTrigger asChild>
                 <div className="flex items-center justify-center gap-5 py-2 rounded-lg border cursor-pointer hover:bg-indigo-650">
                   <span className="text-base font-medium text-white">
-                    Jessica Smith
+                   {user?.name}
                   </span>
                   <Avatar className="h-8 w-8 border">
-                    <AvatarImage src="https://s3-alpha-sig.figma.com/img/891f/f665/4cabb52b14cb062ef4178cdbf1e04781?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=PzaRre0nkw1KM-inermkip96p4JVNIp5ZYtAAEuJiN7oh1xGxiFmWnvn6dCY7u9zk~SWSzVSlXv2R36ap0UAQcswVhtuQkv5nUkDP0yEsDcNA92S2cM-4Oe0uDehTPHhQulewiHGyC-CUmxmxTxdN0UF-y3FYRSctKF0g7dV6ITgUi16XNRQgPRmh0ucJzm0aRhy-RhCH2JUfO8Jz~oYDG9xXzFQogyuVkLLvjy57yQKU3AU5SCpAbKzlgsa77L7MpSkKmsQ2F211P26EcX5mCOAupawCudMgmK4U0H68CQAsG~U4palYQexLtmdYJ5MLjJBGC3iEfZi7zhOYSqBPw__" />
+                    <AvatarImage src={user?.profile_picture ||"/images/user.png"} />
                   </Avatar>
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="w-52 border border-white p-0 bg-inherit hidden max-sm:block">
+              <PopoverContent className="w-[220px] border border-white p-0 bg-inherit hidden max-sm:block">
                 <div className="space-y-1">
                   <Link
                     href="/account"
@@ -250,6 +256,8 @@ export default function Sidebar() {
               </PopoverContent>
             </Popover>
           </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -341,37 +349,50 @@ export default function Sidebar() {
             </Button>
           </Link>
 
-          <div className="w-full px-4">
-            <Button
-              variant="ghost"
-              className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
-            >
+          {isAuthenticated ? ( <div className="w-full px-4">
+              <Button
+                variant="ghost"
+                className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
+              >
               Logout
               <LogOut className="ml-2 size-6" />
             </Button>
-          </div>
+          </div>) : 
+           
+           ( <div className="w-full px-4">
+            <Button
+              variant="ghost"
+              className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
+              onClick={() => {router.push('/signin')}}
+            >
+            Sign In
+            <LogIn className="ml-2 size-6" />
+          </Button>
+        </div>)
+        }
         </div>
-
-        <div className="w-full px-4 mt-auto mb-5">
-          <Popover
-            open={isDesktopPopoverOpen}
-            onOpenChange={setIsDesktopPopoverOpen}
-          >
+        {isAuthenticated && (
+          <div className="w-full px-4 mt-auto mb-5">
+            <Popover
+              open={isDesktopPopoverOpen}
+              onOpenChange={setIsDesktopPopoverOpen}
+            >
             <PopoverTrigger asChild>
               <div className="flex items-center justify-center gap-5 py-2 rounded-lg border cursor-pointer hover:bg-indigo-650 ">
                 <span className="text-base font-medium text-white">
-                  Jessica Smith
+                  {user?.name}
                 </span>
                 <Avatar className="h-8 w-8 border">
-                  <AvatarImage src="https://s3-alpha-sig.figma.com/img/891f/f665/4cabb52b14cb062ef4178cdbf1e04781?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=PzaRre0nkw1KM-inermkip96p4JVNIp5ZYtAAEuJiN7oh1xGxiFmWnvn6dCY7u9zk~SWSzVSlXv2R36ap0UAQcswVhtuQkv5nUkDP0yEsDcNA92S2cM-4Oe0uDehTPHhQulewiHGyC-CUmxmxTxdN0UF-y3FYRSctKF0g7dV6ITgUi16XNRQgPRmh0ucJzm0aRhy-RhCH2JUfO8Jz~oYDG9xXzFQogyuVkLLvjy57yQKU3AU5SCpAbKzlgsa77L7MpSkKmsQ2F211P26EcX5mCOAupawCudMgmK4U0H68CQAsG~U4palYQexLtmdYJ5MLjJBGC3iEfZi7zhOYSqBPw__" />
+                  <AvatarImage src={user?.profile_picture ||"/images/user.png"} />
                 </Avatar>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-44 border border-white p-0 py-2 bg-inherit max-sm:hidden">
-              <div className="flex flex-col items-center justify-center gap-2">
+            <PopoverContent className="w-[185px] border border-white px-0 py-2 bg-inherit max-sm:hidden bg-black">
+              <div className="flex flex-col items-center justify-center gap-2 ">
                 <Link
                   href="/account"
                   onClick={() => setIsDesktopPopoverOpen(false)}
+                  
                 >
                   <Button
                     variant="ghost"
@@ -394,6 +415,7 @@ export default function Sidebar() {
             </PopoverContent>
           </Popover>
         </div>
+      )}
       </div>
     </>
   );
