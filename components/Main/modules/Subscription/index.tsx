@@ -15,55 +15,55 @@ const SubscriptionPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [plans, setPlans] = useState<SubscriptionPlan[]>(subscriptionsData);
-  const [activeSubscription, setActiveSubscription] =
-    useState<UserSubscription | null>(null);
+  // const [activeSubscription, setActiveSubscription] =
+  //   useState<UserSubscription | null>(null);
 
-  // Fetch user's active subscription when component mounts
-  useEffect(() => {
-    const fetchUserSubscription = async () => {
-      try {
-        const result = await getUserSubscription();
-        if (result.success && result.subscription) {
-          setActiveSubscription(result.subscription);
-        }
-      } catch (error) {
-        console.error("Error fetching user subscription:", error);
-      }
-    };
+  // // Fetch user's active subscription when component mounts
+  // useEffect(() => {
+  //   const fetchUserSubscription = async () => {
+  //     try {
+  //       const result = await getUserSubscription();
+  //       if (result.success && result.subscription) {
+  //         setActiveSubscription(result.subscription);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching user subscription:", error);
+  //     }
+  //   };
 
-    fetchUserSubscription();
-  }, []);
+  //   fetchUserSubscription();
+  // }, []);
 
-  // Fetch subscription plans from API
-  useEffect(() => {
-    const fetchPlans = async () => {
-      setIsLoading(true);
-      try {
-        const result = await getSubscriptionPlans(selectedDuration as any);
-        if (result.success && result.plans) {
-          setPlans(result.plans as any);
-        } else {
-          // Fallback to sample data if API fails
-          const filteredPlans = subscriptionsData.filter(
-            (plan) => plan.duration === selectedDuration
-          );
-          setPlans(filteredPlans);
-          console.log("Using fallback subscription data");
-        }
-      } catch (error) {
-        console.error("Error fetching subscription plans:", error);
-        // Fallback to sample data
-        const filteredPlans = subscriptionsData.filter(
-          (plan) => plan.duration === selectedDuration
-        );
-        setPlans(filteredPlans);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // // Fetch subscription plans from API
+  // useEffect(() => {
+  //   const fetchPlans = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const result = await getSubscriptionPlans(selectedDuration as any);
+  //       if (result.success && result.plans) {
+  //         setPlans(result.plans as any);
+  //       } else {
+  //         // Fallback to sample data if API fails
+  //         const filteredPlans = subscriptionsData.filter(
+  //           (plan) => plan.duration === selectedDuration
+  //         );
+  //         setPlans(filteredPlans);
+  //         console.log("Using fallback subscription data");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching subscription plans:", error);
+  //       // Fallback to sample data
+  //       const filteredPlans = subscriptionsData.filter(
+  //         (plan) => plan.duration === selectedDuration
+  //       );
+  //       setPlans(filteredPlans);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchPlans();
-  }, [selectedDuration]);
+  //   fetchPlans();
+  // }, [selectedDuration]);
 
   const handleSubscribe = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
@@ -79,56 +79,56 @@ const SubscriptionPage = () => {
       return;
     }
 
-    try {
-      setIsLoading(true);
+    // try {
+    //   setIsLoading(true);
 
-      // Call subscription API
-      const result = await subscribeToPlan(selectedPlan.id || "", {
-        paymentMethod: formData.paymentMethod,
-        fullName: formData.fullName,
-        cardNumber: formData.cardNumber,
-        expiryDate: formData.expiryDate,
-        cvc: formData.cvc,
-        savePaymentMethod: true,
-      });
+    // Call subscription API
+    // const result = await subscribeToPlan(selectedPlan.id || "", {
+    //   paymentMethod: formData.paymentMethod,
+    //   fullName: formData.fullName,
+    //   cardNumber: formData.cardNumber,
+    //   expiryDate: formData.expiryDate,
+    //   cvc: formData.cvc,
+    //   savePaymentMethod: true,
+    // });
 
-      if (result.success) {
-        toast.success("Subscription successful!", {
-          position: "bottom-right",
-          duration: 3000,
-        });
+    // if (result.success) {
+    //   toast.success("Subscription successful!", {
+    //     position: "bottom-right",
+    //     duration: 3000,
+    //   });
 
-        if (result.subscription) {
-          setActiveSubscription(result.subscription);
-        }
+    //   // if (result.subscription) {
+    //   //   setActiveSubscription(result.subscription);
+    //   // }
 
-        setShowForm(false);
-      } else {
-        toast.error(result.message || "Failed to process subscription", {
-          position: "bottom-right",
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error("Subscription error:", error);
-      toast.error("An error occurred while processing your subscription", {
-        position: "bottom-right",
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    //     setShowForm(false);
+    //   } else {
+    //     toast.error(result.message || "Failed to process subscription", {
+    //       position: "bottom-right",
+    //       duration: 3000,
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error("Subscription error:", error);
+    //   toast.error("An error occurred while processing your subscription", {
+    //     position: "bottom-right",
+    //     duration: 3000,
+    //   });
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
   };
 
-  // Determine if a plan is the user's active plan
-  const isPlanActive = (plan: SubscriptionPlan) => {
-    if (!activeSubscription) return false;
-    return activeSubscription.planId === (plan.id || plan.plan);
-  };
+  // // Determine if a plan is the user's active plan
+  // const isPlanActive = (plan: SubscriptionPlan) => {
+  //   if (!activeSubscription) return false;
+  //   return activeSubscription.planId === (plan.id || plan.plan);
+  // };
 
   return (
     <div className="p-3 h-screen max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">
@@ -163,7 +163,8 @@ const SubscriptionPage = () => {
                       key={plan.id || plan.plan}
                       plan={plan}
                       onSubscribe={handleSubscribe}
-                      isActive={isPlanActive(plan)}
+                      // isActive={isPlanActive(plan)}
+                      isActive={true}
                     />
                   ))}
                 </div>
