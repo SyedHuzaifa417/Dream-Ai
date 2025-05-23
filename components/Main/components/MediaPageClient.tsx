@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import {  useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { generateImage, downloadMedia, shareMedia, postMedia } from "@/app/services/media";
+import { generateImage, generateVideo, generateImageToImage, generateImageToVideo, downloadMedia, shareMedia, postMedia } from "@/app/services/media";
+import { getCurrentUserEmail } from "@/app/services/auth/authApi";
 
 type MediaData = {
   type: "image" | "video";
@@ -17,6 +18,7 @@ interface MediaPageClientProps {
   onBack?: () => void;
   type: "image" | "video";
   prompt?: string;
+  uploadedImage?: File | null;
   settings?: {
     style?: string;
     aspectRatio?: string;
@@ -32,39 +34,122 @@ export function MediaPageClient({
   type,
   onBack,
   prompt,
+  uploadedImage = null,
   settings = {},
 }: MediaPageClientProps) {
   const [mediaData, setMediaData] = useState<MediaData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const generationStarted = useRef(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Generate media using the API
-  const generateMedia = useCallback(async () => {
-    // Prevent multiple API calls
-    if (generationStarted.current) return;
-    generationStarted.current = true;
+  const generateMedia = async () => {
+    const email = getCurrentUserEmail();
+    if (!email) {
+      toast.error("Please login first to generate media", {
+        position: "bottom-right",
+        duration: 3000,
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    setErrorMessage(null);
+    
+    let remainingTime = 120;
+    setTimeRemaining(remainingTime);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    timerRef.current = setInterval(() => {
+      remainingTime -= 1;
+      setTimeRemaining(remainingTime);
+      
+      if (remainingTime <= 0 && timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }, 1000);
 
     try {
       let response;
 
+      // Map aspect ratio from UI settings to API format
+      let mappedAspectRatio = "1:1";
+      if (settings.aspectRatio) {
+        switch (settings.aspectRatio.toLowerCase()) {
+          case "square":
+            mappedAspectRatio = "1:1";
+            break;
+          case "landscape":
+            mappedAspectRatio = "16:9";
+            break;
+          case "portrait":
+            mappedAspectRatio = "9:16";
+            break;
+          case "wide":
+            mappedAspectRatio = "4:3";
+            break;
+          case "tall":
+            mappedAspectRatio = "3:4";
+            break;
+          default:
+            if (/^\d+:\d+$/.test(settings.aspectRatio)) {
+              mappedAspectRatio = settings.aspectRatio;
+            }
+        }
+      }
+
       if (type === "image") {
-        response = await generateImage(prompt, {
-          guidanceScale: settings.guidanceScale,
-          inferenceSteps: settings.inferenceSteps,
-          excludeText: settings.excludeText,
-          autoTitle: settings.autoTitle,
-          autoDescription: settings.autoDescription,
-          style: settings.style,
-          aspectRatio: settings.aspectRatio
-        });
+        if (uploadedImage) {
+          // Use image-to-image if an image is provided
+          response = await generateImageToImage(uploadedImage, prompt || "", {
+            aspectRatio: mappedAspectRatio,
+            autoTitle: settings.autoTitle,
+            autoDescription: settings.autoDescription,
+            num_inference_steps: settings.inferenceSteps || 28,
+            guidance: settings.guidanceScale ? settings.guidanceScale / 10 : 5,
+            output_quality: 90,
+            prompt_strength: 0.8
+          });
+        } else {
+          // Use text-to-image if no image is provided
+          response = await generateImage(prompt, {
+          // guidanceScale: settings.guidanceScale,
+          // inferenceSteps: settings.inferenceSteps,
+          // excludeText: settings.excludeText,
+          // style: settings.style,
+          // aspectRatio: settings.aspectRatio
+            num_inference_steps: settings.inferenceSteps || 4,
+            seed: Math.floor(Math.random() * 4294967295),
+            autoTitle: settings.autoTitle,
+            autoDescription: settings.autoDescription,
+            aspectRatio: mappedAspectRatio
+          });
+        }
       } else {
-        // Video generation not implemented yet
-        console.log("Video generation not implemented yet");
-        setErrorMessage("Video generation is not implemented yet");
-        setIsLoading(false);
-        return;
+        if (uploadedImage) {
+          // Use image-to-video if an image is provided
+          response = await generateImageToVideo(uploadedImage, prompt || "", {
+            aspect_ratio: mappedAspectRatio,
+            autoTitle: settings.autoTitle,
+            autoDescription: settings.autoDescription,
+            fast_mode: "Balanced",
+            sample_steps: settings.inferenceSteps || 30,
+            sample_guide_scale: settings.guidanceScale ? Math.round(settings.guidanceScale / 5) : 5
+          });
+        } else {
+          // Use text-to-video if no image is provided
+          response = await generateVideo(prompt, {
+            aspect_ratio: "16:9",
+            autoTitle: settings.autoTitle,
+            autoDescription: settings.autoDescription,
+            fast_mode: "Balanced"
+          });
+        }
       }
 
       if (response && response.success && response.data) {
@@ -89,37 +174,35 @@ export function MediaPageClient({
       }
 
       setIsLoading(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     } catch (error) {
       console.error("Error generating media:", error);
-      setErrorMessage("Failed to generate media. Please try again.");
+      setErrorMessage("Failed to generate media. The subscription plan may be expired");
       setIsLoading(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
       toast.error("Failed to generate media", {
         position: "bottom-right",
-        duration: 3000,
+        duration: 5000,
       });
     }
-  }, [type, prompt, settings]);
+  };
 
+  
   useEffect(() => {
-    // Reset state when component mounts
-    generationStarted.current = false;
-
-    // Countdown timer to show progress
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-
-          // Call API
-          generateMedia();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [generateMedia]);
+    generateMedia();
+    
+  
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -234,34 +317,49 @@ export function MediaPageClient({
   }
 
   return (
-    <div className="w-full p-4 pt-0 flex items-start justify-start ">
+    <div className="w-full p-4 pt-0 flex items-start justify-start">
       <div className="w-full">
         <div className="relative w-full h-[600px] max-xl:h-[450px] max-sm:h-[400px] self-start">
-          <Image
-            src={mediaData.url}
-            alt={mediaData.title}
-            className="w-full h-full rounded-lg object-cover"
-            width={800}
-            height={800}
-            priority
-          />
+          {mediaData && mediaData.type === "video" ? (
+            <video
+              ref={videoRef}
+              src={mediaData.url}
+              className="w-full h-full rounded-lg object-cover"
+              controls
+              autoPlay
+              playsInline
+              loop
+            />
+          ) : mediaData ? (
+            <Image
+              src={mediaData.url}
+              alt={mediaData.title || "Generated image"}
+              className="w-full h-full rounded-lg object-cover"
+              width={800}
+              height={800}
+              priority
+            />
+          ) : null}
         </div>
         <div className="mt-4 text-white space-x-2 w-2/3 flex max-sm:w-full">
           <Button
             className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
-            onClick={handlePostTo}
+            onClick={handleShare}
+            disabled={isLoading}
           >
             Post To
           </Button>
           <Button
             className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
             onClick={handleShare}
+            disabled={isLoading}
           >
             Share
           </Button>
           <Button
             className="flex-1 w-full bg-indigo-650 hover:bg-indigo-700 text-white text-sm"
             onClick={handleDownload}
+            disabled={isLoading}
           >
             Download
           </Button>

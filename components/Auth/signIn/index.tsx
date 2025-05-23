@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FcGoogle } from "react-icons/fc";
-import { useLoginMutation } from "@/app/services/auth";
+import { useAuth } from "@/app/services/auth/authContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -31,16 +31,15 @@ export default function SignIn() {
     resolver: zodResolver(signInSchema),
   });
 
-  const loginMutation = useLoginMutation();
-  const isSubmitting = loginMutation.isPending;
+  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async (data: SignInForm) => {
     try {
-      await loginMutation.mutateAsync({
-        email: data.email,
-        password: data.password,
-      });
-
+      setIsSubmitting(true);
+      
+      await login(data.email, data.password);
+      
       if (rememberMe) {
         localStorage.setItem("rememberEmail", data.email);
       } else {
@@ -51,14 +50,18 @@ export default function SignIn() {
         position: "bottom-right",
         duration: 3000,
       });
+      
       setTimeout(() => {
         router.push("/videos");
-      }, 3000);
+      }, 1000);
     } catch (error) {
+      console.error('Login error:', error);
       toast.error("The email or password is incorrect", {
         position: "bottom-right",
         duration: 3000,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

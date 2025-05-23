@@ -61,6 +61,7 @@ export default function VideoGrid() {
             className={`w-full h-auto rounded-lg transition-transform duration-300 group-hover:scale-105 object-cover ${
               isHovered ? "opacity-0" : "opacity-100"
             }`}
+            priority
           />
           <div
             className={`absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ${

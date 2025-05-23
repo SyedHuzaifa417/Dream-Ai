@@ -27,6 +27,7 @@ export default function ImageGrid() {
         width={800}
         height={800}
         className="w-full h-auto rounded-lg transition-transform group-hover:scale-105"
+        priority
       />
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-opacity flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
         <h3 className="text-white font-bold text-lg">{item.title}</h3>

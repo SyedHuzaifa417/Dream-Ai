@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SubscriptionPlan } from "./SubscriptionCard";
 import { RxCross2 } from "react-icons/rx";
 import { subscriptionsData } from "../utlis/Data_tbr";
 import { FaCreditCard, FaPaypal, FaApplePay, FaSpinner } from "react-icons/fa";
 import clsx from "clsx";
 import { IoIosCheckmark } from "react-icons/io";
+import { createCheckoutSession } from "@/app/services/subscription/subscriptionApi";
+import { useRouter } from "next/navigation";
+import { SubscriptionPlan, SubscriptionFormData } from "../types";
 import {
   Select,
   SelectContent,
@@ -22,27 +24,39 @@ const subscriptionFormSchema = z.object({
   paymentMethod: z.enum(["creditCard", "paypal", "applePay"]),
   cardNumber: z
     .string()
-    .min(14, "Card number is too short")
-    .max(19, "Card number is too long")
+    .length(19, "Card number must be exactly 16 digits")
     .optional(),
   expiryDate: z
     .string()
     .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Expiry date must be in MM/YY format")
+    .refine((value) => {
+      if (!value) return true;
+      
+      const [month, year] = value.split('/');
+      if (!month || !year) return false;
+      
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear() % 100;
+      const currentMonth = currentDate.getMonth() + 1; 
+      
+      const expMonth = parseInt(month, 10);
+      const expYear = parseInt(year, 10);
+      
+      return (expYear > currentYear) || (expYear === currentYear && expMonth >= currentMonth);
+    }, "Card has expired")
     .optional(),
   cvc: z
     .string()
-    .min(3, "CVC must be at least 3 digits")
-    .max(4, "CVC can be max 4 digits")
+    .length(3, "CVC must be exactly 3 digits")
     .optional(),
 });
-
-type SubscriptionFormData = z.infer<typeof subscriptionFormSchema>;
 
 interface SubscriptionFormProps {
   plan: SubscriptionPlan | undefined;
   onClose: () => void;
   onSubmit: (data: SubscriptionFormData) => void;
   isLoading?: boolean;
+  stripeKey?: string;
 }
 
 const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
@@ -50,7 +64,10 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   onClose,
   onSubmit,
   isLoading = false,
+  stripeKey,
 }) => {
+  
+  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<
     SubscriptionPlan | undefined
   >(initialPlan);
@@ -60,6 +77,8 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   const filteredPlans = subscriptionsData.filter(
     (plan) => plan.duration === (initialPlan?.duration || "monthly")
   );
+
+  
 
   const {
     register,
@@ -107,20 +126,104 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     }
   };
 
-  const processSubmit = (data: SubscriptionFormData) => {
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (cleanValue.length <= 16) {
+      const formatted = cleanValue.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+      setValue('cardNumber', cleanValue);
+      e.target.value = formatted;
+    }
+  };
+
+  const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cleanValue = value.replace(/\D/g, '');
+    
+    let formatted = '';
+    
+    if (cleanValue.length === 0) {
+      formatted = '';
+    } else if (cleanValue.length === 1) {
+      if (parseInt(cleanValue) > 1) {
+        formatted = `0${cleanValue}/`;
+      } else {
+        formatted = cleanValue;
+      }
+    } else if (cleanValue.length === 2) {
+      const month = parseInt(cleanValue);
+      if (month > 12) {
+        formatted = '12/';
+      } else if (month === 0) {
+        formatted = '01/';
+      } else {
+        formatted = `${cleanValue}/`;
+      }
+    } else {
+      const month = cleanValue.substring(0, 2);
+      const year = cleanValue.substring(2, 4);
+      
+      if (parseInt(month) > 12) {
+        formatted = `12/${year}`;
+      } else if (parseInt(month) === 0) {
+        formatted = `01/${year}`;
+      } else {
+        formatted = `${month}/${year}`;
+      }
+    }
+    
+    setValue('expiryDate', formatted);
+    e.target.value = formatted;
+  };
+
+  const handleCVCChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (cleanValue.length <= 3) {
+      setValue('cvc', cleanValue);
+      e.target.value = cleanValue;
+    }
+  };
+
+  const processSubmit = async (data: SubscriptionFormData) => {
     if (!selectedPlan) {
       alert("Please select a plan to continue");
       return;
     }
-
-    onSubmit({
-      ...data,
-      cardNumber:
-        data.paymentMethod === "creditCard" ? data.cardNumber : undefined,
-      expiryDate:
-        data.paymentMethod === "creditCard" ? data.expiryDate : undefined,
-      cvc: data.paymentMethod === "creditCard" ? data.cvc : undefined,
-    });
+    
+    try {
+      const result = await createCheckoutSession(
+        selectedPlan.plan, // plan_type: basic, standard, professional
+        selectedPlan.duration, // duration: weekly, monthly, yearly
+        stripeKey // Pass the Stripe key if available
+      );
+      
+      if (result.status === 'success') {
+        onSubmit({
+          ...data,
+          cardNumber:
+            data.paymentMethod === "creditCard" ? data.cardNumber : undefined,
+          expiryDate:
+            data.paymentMethod === "creditCard" ? data.expiryDate : undefined,
+          cvc: data.paymentMethod === "creditCard" ? data.cvc : undefined,
+          planType: selectedPlan.plan,
+          duration: selectedPlan.duration,
+        });
+        
+        if (result.url) {
+          window.location.href = result.url;
+        } else {
+          router.push('/subscriptions');
+        }
+      } else {
+        alert(result.message || "Failed to process subscription");
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      alert("An error occurred while processing your subscription");
+    }
   };
 
   const getHeadingText = () => {
@@ -364,12 +467,12 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                           ? "border-red-500"
                           : "border-indigo-650"
                       }`}
-                      placeholder="1234 5678 9012 3456"
+                      placeholder="XXXX XXXX XXXX XXXX"
                       inputMode="numeric"
-                      pattern="[0-9\s]+"
+                      maxLength={19}
                       onKeyDown={(e) => {
                         if (
-                          !/[0-9\s]/.test(e.key) &&
+                          !/[0-9]/.test(e.key) &&
                           e.key !== "Backspace" &&
                           e.key !== "Delete" &&
                           e.key !== "ArrowLeft" &&
@@ -379,7 +482,9 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                           e.preventDefault();
                         }
                       }}
-                      {...register("cardNumber")}
+                      {...register("cardNumber", {
+                        onChange: handleCardNumberChange
+                      })}
                     />
                     {errors.cardNumber && (
                       <p className="text-red-500 text-xs mt-1">
@@ -402,9 +507,10 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                         }`}
                         placeholder="MM/YY"
                         inputMode="numeric"
+                        maxLength={5} // MM/YY format
                         onKeyDown={(e) => {
                           if (
-                            !/[0-9/]/.test(e.key) &&
+                            !/[0-9]/.test(e.key) &&
                             e.key !== "Backspace" &&
                             e.key !== "Delete" &&
                             e.key !== "ArrowLeft" &&
@@ -414,7 +520,9 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                             e.preventDefault();
                           }
                         }}
-                        {...register("expiryDate")}
+                        {...register("expiryDate", {
+                          onChange: handleExpiryDateChange
+                        })}
                       />
                       {errors.expiryDate && (
                         <p className="text-red-500 text-xs mt-1">
@@ -431,7 +539,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                         }`}
                         placeholder="123"
                         inputMode="numeric"
-                        pattern="[0-9]+"
+                        maxLength={3}
                         onKeyDown={(e) => {
                           if (
                             !/[0-9]/.test(e.key) &&
@@ -444,7 +552,9 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                             e.preventDefault();
                           }
                         }}
-                        {...register("cvc")}
+                        {...register("cvc", {
+                          onChange: handleCVCChange
+                        })}
                       />
                       {errors.cvc && (
                         <p className="text-red-500 text-xs mt-1">

@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   description: "AI-powered image and video generation",
 };
 
+function ClientProviders({ children }: { children: React.ReactNode }) {
+  return <Providers>{children}</Providers>;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

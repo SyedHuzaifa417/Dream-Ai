@@ -1,134 +1,176 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { subscriptionsData } from "./utlis/Data_tbr";
-import SubscriptionCard, {
-  SubscriptionPlan,
-} from "./components/SubscriptionCard";
+import SubscriptionCard from "./components/SubscriptionCard";
 import SubscriptionForm from "./components/SubscriptionForm";
-
+import {
+  getSubscriptionPlans,
+  getSubscriptionStatus,
+  createCheckoutSession,
+} from "@/app/services/subscription/subscriptionApi";
+import { SubscriptionStatus } from "./types";
 import { toast } from "sonner";
+import { useAuth } from "@/app/services/auth/authContext";
+
+interface Plan {
+  id?: string;
+  plan: string;
+  duration: string;
+  desc: string;
+  price: number;
+  perks: string[];
+}
 
 const SubscriptionPage = () => {
+  const { user, isAuthenticated } = useAuth();
   const [selectedDuration, setSelectedDuration] = useState("monthly");
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>();
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [plans, setPlans] = useState<SubscriptionPlan[]>(subscriptionsData);
-  // const [activeSubscription, setActiveSubscription] =
-  //   useState<UserSubscription | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [stripePublishableKey, setStripePublishableKey] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
 
-  // // Fetch user's active subscription when component mounts
-  // useEffect(() => {
-  //   const fetchUserSubscription = async () => {
-  //     try {
-  //       const result = await getUserSubscription();
-  //       if (result.success && result.subscription) {
-  //         setActiveSubscription(result.subscription);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching user subscription:", error);
-  //     }
-  //   };
 
-  //   fetchUserSubscription();
-  // }, []);
+  // Fetch subscription status
+  useEffect(() => {
+    const fetchSubscriptionStatus = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        const result = await getSubscriptionStatus();
+        
+        if (result.status === 'success' && result.subscription) {
+          setSubscription(result.subscription);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription status:", error);
+      }
+    };
 
-  // // Fetch subscription plans from API
-  // useEffect(() => {
-  //   const fetchPlans = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       const result = await getSubscriptionPlans(selectedDuration as any);
-  //       if (result.success && result.plans) {
-  //         setPlans(result.plans as any);
-  //       } else {
-  //         // Fallback to sample data if API fails
-  //         const filteredPlans = subscriptionsData.filter(
-  //           (plan) => plan.duration === selectedDuration
-  //         );
-  //         setPlans(filteredPlans);
-  //         console.log("Using fallback subscription data");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching subscription plans:", error);
-  //       // Fallback to sample data
-  //       const filteredPlans = subscriptionsData.filter(
-  //         (plan) => plan.duration === selectedDuration
-  //       );
-  //       setPlans(filteredPlans);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+    fetchSubscriptionStatus();
+  }, [isAuthenticated]);
 
-  //   fetchPlans();
-  // }, [selectedDuration]);
+  // Fetch subscription plans
+  useEffect(() => {
+    const fetchPlans = async () => {
+      setIsLoading(true);
+      setError("");
 
-  const handleSubscribe = (plan: SubscriptionPlan) => {
+      try {
+        const response = await getSubscriptionPlans();
+
+        if (response.status === "success" && response.plans) {
+          // Extract Stripe key, handle different key formats
+          const publishableKey = response.stripe_publishable_key || response.stripe_key;
+          if (publishableKey) {
+            const keyMatch = publishableKey.match(/=(.+)$/);
+            const cleanKey = keyMatch ? keyMatch[1] : publishableKey;
+            setStripePublishableKey(cleanKey);
+          }
+
+          // Format plans for display
+          const formattedPlans: Plan[] = [];
+
+          Object.entries(response.plans).forEach(([planType, planData]: [string, any]) => {
+            Object.entries(planData).forEach(([duration, details]: [string, any]) => {
+              const perks = [...(details.perks || [])];
+              const imagesPerDay = details.images_per_day;
+              const videoMinutesPerDay = details.video_minutes_per_day;
+
+              if (imagesPerDay !== undefined) {
+                if (imagesPerDay === -1) {
+                  perks.unshift(`Unlimited images per day`);
+                } else {
+                  perks.unshift(`${imagesPerDay} images per day`);
+                }
+              }
+
+              if (videoMinutesPerDay !== undefined) {
+                if (videoMinutesPerDay === -1) {
+                  perks.unshift(`Unlimited video minutes per day`);
+                } else {
+                  perks.unshift(`${videoMinutesPerDay} video minutes per day`);
+                }
+              }
+
+              formattedPlans.push({
+                plan: planType,
+                duration: duration,
+                desc: details.description,
+                price: details.price,
+                perks: perks.slice(0, 6) // Limit to 6 perks for display
+              });
+            });
+          });
+
+          setPlans(formattedPlans);
+        } else {
+          throw new Error(response.message || "Failed to fetch plans");
+        }
+      } catch (error: any) {
+        console.error("Error fetching plans:", error);
+        setError(error.message || "Failed to fetch subscription plans");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, [selectedDuration, isAuthenticated, user]);
+
+  const handleSubscribe = (plan: Plan) => {
     setSelectedPlan(plan);
     setShowForm(true);
   };
 
   const handleFormSubmit = async (formData: any) => {
     if (!selectedPlan) {
-      toast.error("Please select a subscription plan", {
-        position: "bottom-right",
-        duration: 3000,
-      });
+      toast.error("Please select a subscription plan");
       return;
     }
 
-    // try {
-    //   setIsLoading(true);
+    try {
+      setProcessing(true);
 
-    // Call subscription API
-    // const result = await subscribeToPlan(selectedPlan.id || "", {
-    //   paymentMethod: formData.paymentMethod,
-    //   fullName: formData.fullName,
-    //   cardNumber: formData.cardNumber,
-    //   expiryDate: formData.expiryDate,
-    //   cvc: formData.cvc,
-    //   savePaymentMethod: true,
-    // });
+      // Create checkout session
+      const result = await createCheckoutSession(
+        selectedPlan.plan,
+        selectedPlan.duration
+      );
 
-    // if (result.success) {
-    //   toast.success("Subscription successful!", {
-    //     position: "bottom-right",
-    //     duration: 3000,
-    //   });
-
-    //   // if (result.subscription) {
-    //   //   setActiveSubscription(result.subscription);
-    //   // }
-
-    //     setShowForm(false);
-    //   } else {
-    //     toast.error(result.message || "Failed to process subscription", {
-    //       position: "bottom-right",
-    //       duration: 3000,
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Subscription error:", error);
-    //   toast.error("An error occurred while processing your subscription", {
-    //     position: "bottom-right",
-    //     duration: 3000,
-    //   });
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      if (result.status === "success" && result.url) {
+        toast.success("Redirecting to checkout...");
+        // Redirect to Stripe checkout
+        window.location.href = result.url;
+      } else {
+        toast.error(result.message || "Failed to create checkout session");
+      }
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error);
+      toast.error(error.message || "An error occurred");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
   };
 
-  // // Determine if a plan is the user's active plan
-  // const isPlanActive = (plan: SubscriptionPlan) => {
-  //   if (!activeSubscription) return false;
-  //   return activeSubscription.planId === (plan.id || plan.plan);
-  // };
+
+  // Check if the plan is active
+  const isPlanActive = (plan: Plan) => {
+    if (!subscription) return false;
+    
+    return (
+      subscription.plan === plan.plan &&
+      subscription.duration === plan.duration &&
+      subscription.status === "active"
+    );
+  };
 
   return (
     <div className="p-3 h-screen max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">
@@ -139,13 +181,13 @@ const SubscriptionPage = () => {
               {["weekly", "monthly", "yearly"].map((duration) => (
                 <button
                   key={duration}
-                  className={` py-3 rounded-3xl transition-all flex-1 font-semibold capitalize ${
+                  className={`py-3 rounded-3xl transition-all flex-1 font-semibold capitalize ${
                     selectedDuration === duration
                       ? "bg-white text-gray-800"
-                      : " text-white hover:bg-white/80 hover:text-gray-800"
+                      : "text-white hover:bg-white/80 hover:text-gray-800"
                   }`}
                   onClick={() => setSelectedDuration(duration)}
-                  disabled={isLoading}
+                  disabled={isLoading || processing}
                 >
                   {duration}
                 </button>
@@ -156,27 +198,42 @@ const SubscriptionPage = () => {
                 <div className="flex justify-center items-center h-full">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-650"></div>
                 </div>
+              ) : error ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="text-red-500 text-center p-4 bg-red-100 rounded-lg max-w-md">
+                    <p className="font-semibold mb-2">Error</p>
+                    <p>{error}</p>
+                  </div>
+                </div>
+              ) : plans.length === 0 ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="text-gray-500 text-center p-4 bg-gray-100 rounded-lg max-w-md">
+                    <p>No subscription plans available</p>
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-3 gap-6 px-4 max-sm:grid-cols-1 max-xl:grid-cols-2">
-                  {plans.map((plan) => (
-                    <SubscriptionCard
-                      key={plan.id || plan.plan}
-                      plan={plan}
-                      onSubscribe={handleSubscribe}
-                      // isActive={isPlanActive(plan)}
-                      isActive={true}
-                    />
-                  ))}
+                  {plans
+                    .filter((plan) => plan.duration === selectedDuration)
+                    .map((plan, index) => (
+                      <SubscriptionCard
+                        key={`${plan.plan}-${plan.duration}-${index}`}
+                        plan={plan}
+                        onSubscribe={() => handleSubscribe(plan)}
+                        isActive={isPlanActive(plan)}
+                      />
+                    ))}
                 </div>
               )}
             </div>
           </>
         ) : (
           <SubscriptionForm
-            plan={selectedPlan}
+            plan={selectedPlan!}
             onClose={handleCloseForm}
             onSubmit={handleFormSubmit}
-            isLoading={isLoading}
+            isLoading={processing}
+            stripeKey={stripePublishableKey}
           />
         )}
       </div>

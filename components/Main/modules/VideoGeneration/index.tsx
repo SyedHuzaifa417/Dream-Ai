@@ -1,16 +1,19 @@
 "use client";
 
+import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import VideoGrid from "@/components/Main/modules/VideoGeneration/components/video-grid";
-import { TbVideo } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
-import { MediaPageClient } from "../../components/MediaPageClient";
-import { useState, useCallback } from "react";
-import { useAuth } from "@/app/services/auth";
+import { MediaPageClient } from "@/components/Main/components/MediaPageClient";
+import { TbPhoto } from "react-icons/tb";
+import { X } from "lucide-react";
 
 export default function VideoPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [settings, setSettings] = useState({
     style: "",
     aspectRatio: "Square",
@@ -20,22 +23,44 @@ export default function VideoPage() {
     inferenceSteps: 30,
     excludeText: "",
   });
-  const { user,isAuthenticated } = useAuth();
-  // Update settings from the settings panel
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const updateSettings = useCallback((newSettings: any) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
   }, []);
 
   const handleGenerate = () => {
     setIsGenerating(true);
+    setHasGenerated(true);
   };
 
   const handleBack = () => {
     setIsGenerating(false);
+    setHasGenerated(false);
   };
 
-  console.log("user", isAuthenticated);
-  console.info(user);
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+    }
+  };
+
+  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPrompt(value);
+  };
+
+  const clearUploadedImage = () => {
+    setUploadedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <div className="p-3 h-screen max-sm:mt-14 max-sm:h-[calc(100vh-56px)] max-sm:p-0">
@@ -46,11 +71,45 @@ export default function VideoPage() {
               placeholder="Type a prompt here - Example: waterfall, nature video, cinematic landscape, timelapse video..."
               className="w-full pl-4 pr-12 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700"
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={handlePromptChange}
             />
-            <span className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800 bg-transparent ">
-              <TbVideo className="w-6 h-6" />
-            </span>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+               {!uploadedImage && (
+              <span 
+                className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800 bg-transparent cursor-pointer hover:text-gray-600"
+                onClick={handleImageClick}
+              >
+                <TbPhoto className="w-6 h-6" />
+              </span>
+            )}
+            {uploadedImage && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="relative w-10 h-10">
+                  <div className="w-10 h-10 rounded-md overflow-hidden relative">
+                    <Image 
+                      src={URL.createObjectURL(uploadedImage)} 
+                      alt="Uploaded image" 
+                      className="object-cover"
+                      fill
+                    />
+                  </div>
+                  <button
+                    onClick={clearUploadedImage}
+                    className="absolute -top-2 -right-2 bg-white rounded-full p-0.5 z-10 shadow-md"
+                  >
+                    <X className="w-3.5 h-3.5 text-gray-900" />
+                  </button>
+                </div>
+              </div>
+            )}
+           
           </div>
         </div>
 
@@ -59,8 +118,9 @@ export default function VideoPage() {
             <SettingsPanel
               type="video"
               onGenerate={handleGenerate}
-              isPromptValid={prompt.trim() !== ""}
+              isPromptValid={prompt.trim() !== "" || uploadedImage !== null}
               onSettingsChange={updateSettings}
+              hasGenerated={hasGenerated}
             />
           </div>
           <div className="flex mb-3 w-5/6 max-xl:w-3/4 pt-2 max-lg:w-full max-lg:order-2 items-center justify-center">
@@ -69,6 +129,7 @@ export default function VideoPage() {
                 type="video"
                 onBack={handleBack}
                 prompt={prompt}
+                uploadedImage={uploadedImage}
                 settings={settings}
               />
             ) : (

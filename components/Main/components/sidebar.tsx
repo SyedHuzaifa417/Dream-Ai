@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Settings } from "lucide-react";
-import { useAuth } from "@/app/services/auth";
+import { useAuth } from "@/app/services/auth/authContext";
 import { useRouter } from "next/navigation";
 
 export default function Sidebar() {
@@ -205,6 +205,7 @@ export default function Sidebar() {
               <Button
                 variant="ghost"
                 className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
+                onClick={handleLogout}
               >
                 Logout
               <LogOut className="ml-2 size-6" />
@@ -353,6 +354,7 @@ export default function Sidebar() {
               <Button
                 variant="ghost"
                 className="w-full py-5 justify-center text-white hover:bg-indigo-650 hover:text-white border"
+                onClick={handleLogout}
               >
               Logout
               <LogOut className="ml-2 size-6" />

@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 
 const resetPasswordSchema = z
   .object({
-    oldPassword: z
-      .string(),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -23,7 +21,7 @@ const resetPasswordSchema = z
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 type ResetPasswordFormProps = {
-  onSubmit: (password: string, oldPassword: string) => void;
+  onSubmit: (password: string) => void;
   isSubmitting: boolean;
 };
 
@@ -40,7 +38,7 @@ export function ResetPasswordForm({
   });
 
   const handleFormSubmit = (data: ResetPasswordFormData) => {
-    onSubmit(data.password, data.oldPassword);
+    onSubmit(data.password);
   };
 
   return (
@@ -56,26 +54,6 @@ export function ResetPasswordForm({
         onSubmit={handleSubmit(handleFormSubmit)}
         className="space-y-2 px-32 max-lg:px-9"
       >
-        <div>
-          <label
-            htmlFor="oldPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Old Password
-          </label>
-          <Input
-            id="oldPassword"
-            type="password"
-            placeholder="Enter old password"
-            className="w-full py-6"
-            {...register("oldPassword")}
-          />
-          {errors.oldPassword && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.oldPassword.message}
-            </p>
-          )}
-        </div>
 
         <div>
           <label

@@ -4,11 +4,28 @@ export interface User {
   id?: string;
   name?: string;
   email: string;
-  password: string;
-  plan?: string;
-  start_date?: string;
-  end_date?: string;
-  price?: number;
+  password?: string;
+  profile_picture?: string | null;
+  subscription?: SubscriptionInfo;
+  usage?: UserUsage;
+}
+
+export interface SubscriptionInfo {
+  plan: string;
+  duration: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  limits: {
+    images_per_day: number;
+    video_minutes_per_day: number;
+    price?: number;
+  };
+}
+
+export interface UserUsage {
+  images: number;
+  video_minutes: number;
 }
 
 export interface VerifyOtpRequest {
@@ -31,55 +48,80 @@ export interface ResetPasswordRequest {
   reset_flag: string;
 }
 
+export interface CreatePasswordRequest {
+  new_password: string;
+}
+
 export interface ResetPasswordResponse {
   success: boolean;
   message?: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export const saveAuthState = ( isAuthenticated = true) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
-  }
-};
+let currentUserEmail: string | null = null;
 
-export const getAuthState = () => {
-  if (typeof window === 'undefined') return { isAuthenticated: false };
+export const setCurrentUser = (email: string | null) => {
+  currentUserEmail = email;
   
-  try {
-    const isAuthenticated = JSON.parse(localStorage.getItem('isAuthenticated') || 'false');
-    return { isAuthenticated };
-  } catch (error) {
-    console.error('Failed to parse auth state:', error);
-    return { isAuthenticated: false };
-  }
-};
-
-export const saveUserData = (userData: any) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('userData', JSON.stringify(userData));
+    if (email) {
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('isAuthenticated', 'true');
+    } else {
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('isAuthenticated');
+    }
   }
 };
 
-export const getUserData = () => {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    return JSON.parse(localStorage.getItem('userData') || 'null');
-  } catch (error) {
-    console.error('Failed to parse user data:', error);
-    return null;
+export const getCurrentUserEmail = (): string | null => {
+
+  if (currentUserEmail) {
+    return currentUserEmail;
   }
+  
+  // Fall back to localStorage if needed
+  if (typeof window !== 'undefined') {
+    const email = localStorage.getItem('userEmail');
+    if (email) {
+      currentUserEmail = email;
+      return email;
+    }
+  }
+  
+  return null;
+};
+
+export const isUserAuthenticated = (): boolean => {
+  return getCurrentUserEmail() !== null;
+};
+
+export const getAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  
+  const email = getCurrentUserEmail();
+  if (email) {
+    headers['X-User-Email'] = email;
+  }
+  
+  return headers;
 };
 
 export const clearAuthState = () => {
+  currentUserEmail = null;
+  
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('userEmail');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userData');
   }
@@ -87,9 +129,20 @@ export const clearAuthState = () => {
 
 export const authApi = {
   login: async (credentials: Omit<User, 'name'>) => {
-    const response = await api.post('/auth/login', credentials);
-    saveAuthState(true);
-    return response.data;
+    try {
+      const response = await api.post('/auth/login', credentials);
+      
+      if (response.data && response.data.email) {
+        setCurrentUser(response.data.email);
+        return response.data;
+      } else {
+        throw new Error('Invalid login response');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      clearAuthState();
+      throw error;
+    }
   },
   
   signup: async (userData: User) => {
@@ -104,6 +157,11 @@ export const authApi = {
   
   verifyOtp: async (email: string, otpData: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
     const response = await api.post(`/users/${encodeURIComponent(email)}/verify-otp`, otpData);
+    return response.data;
+  },
+  
+  createPassword: async (email: string, passwordData: CreatePasswordRequest): Promise<ResetPasswordResponse> => {
+    const response = await api.post(`/users/${encodeURIComponent(email)}/create-password`, passwordData);
     return response.data;
   },
   

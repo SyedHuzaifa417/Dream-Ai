@@ -1,14 +1,18 @@
 "use client";
 
+import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import ImageGrid from "@/components/Main/modules/ImageGeneration/components/image-grid";
 import { TbPhoto } from "react-icons/tb";
 import SettingsPanel from "../../components/settings-panel";
-import { useState, useCallback } from "react";
 import { MediaPageClient } from "@/components/Main/components/MediaPageClient";
+import { X } from "lucide-react";
 
 export default function ImagesGenerationPage() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const [settings, setSettings] = useState({
     style: "",
@@ -20,19 +24,43 @@ export default function ImagesGenerationPage() {
     excludeText: "",
   });
 
-  // Update settings from the settings panel
+const fileInputRef = useRef<HTMLInputElement>(null);
+
   const updateSettings = useCallback((newSettings: any) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
   }, []);
 
   const handleGenerate = () => {
-    console.log("Generating image with prompt:", prompt);
-    console.log("Image generation settings:", settings);
     setIsGenerating(true);
+    setHasGenerated(true);
   };
 
   const handleBack = () => {
     setIsGenerating(false);
+    setHasGenerated(false);
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+    }
+  };
+
+  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPrompt(value);
+  };
+
+  const clearUploadedImage = () => {
+    setUploadedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -44,12 +72,46 @@ export default function ImagesGenerationPage() {
               placeholder="Type a prompt here - Example: fantasy world, amazing day view, by going home from school, anime, cinematic shot third person view."
               className="w-full pl-4 pr-12 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700 text-base"
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={handlePromptChange}
             />
 
-            <span className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800  bg-transparent ">
-              <TbPhoto className="w-6 h-6" />
-            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+               {!uploadedImage && (
+              <span 
+                className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800 bg-transparent cursor-pointer hover:text-gray-600"
+                onClick={handleImageClick}
+              >
+                <TbPhoto className="w-6 h-6" />
+              </span>
+            )}
+            {uploadedImage && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="relative w-10 h-10">
+                  <div className="w-10 h-10 rounded-md overflow-hidden">
+                    <Image 
+                      src={URL.createObjectURL(uploadedImage)} 
+                      alt="Uploaded image" 
+                      className="object-cover w-10 h-10"
+                      width={40}
+                      height={40}
+                    />
+                  </div>
+                  <button
+                    onClick={clearUploadedImage}
+                    className="absolute -top-2 -right-2 bg-white rounded-full p-0.5 z-10 shadow-md"
+                  >
+                    <X className="w-3.5 h-3.5 text-gray-900" />
+                  </button>
+                </div>
+              </div>
+            )}
+        
           </div>
         </div>
 
@@ -58,8 +120,9 @@ export default function ImagesGenerationPage() {
             <SettingsPanel
               type="image"
               onGenerate={handleGenerate}
-              isPromptValid={prompt.trim() !== ""}
+              isPromptValid={prompt.trim() !== "" || uploadedImage !== null}
               onSettingsChange={updateSettings}
+              hasGenerated={hasGenerated}
             />
           </div>
 
@@ -68,6 +131,7 @@ export default function ImagesGenerationPage() {
               <MediaPageClient
                 type="image"
                 prompt={prompt}
+                uploadedImage={uploadedImage}
                 onBack={handleBack}
                 settings={settings}
               />

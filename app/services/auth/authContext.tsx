@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { authApi, getAuthState, saveAuthState, getUserData, saveUserData, clearAuthState } from './authApi';
+import { authApi, isUserAuthenticated, setCurrentUser, getCurrentUserEmail, clearAuthState, User } from './authApi';
 import { userApi } from '../user/userApi';
 
 interface AuthContextType {
@@ -10,7 +10,9 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<any>;
   logout: () => void;
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
+  loading: boolean;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,60 +26,99 @@ export const AUTH_QUERY_KEY = 'auth';
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
   
-  // Fetch user profile and update state when authenticated
   const fetchUserProfile = useCallback(async () => {
-    if (!isAuthenticated) return;
-    
     try {
+      const email = getCurrentUserEmail();
+      if (!email) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       const profileData = await userApi.getUserProfile();
-      saveUserData(profileData);
+      
       setUser(profileData);
+      setIsAuthenticated(true);
+      
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+      clearAuthState(); 
+    } finally {
+      setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
   
   useEffect(() => {
-    const { isAuthenticated } = getAuthState();
-    setIsAuthenticated(isAuthenticated);
+    let isMounted = true;
     
-    if (isAuthenticated) {
-      fetchUserProfile();
-    } else {
-      const userData = getUserData();
-      if (userData) {
-        setUser(userData);
+    const checkAuth = async () => {
+      if (!isMounted) return;
+      
+      setLoading(true);
+      try {
+        const isLoggedIn = isUserAuthenticated();
+        
+        if (isLoggedIn && isMounted) {
+          await fetchUserProfile();
+        } else if (isMounted) {
+          setIsAuthenticated(false);
+          setUser(null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setUser(null);
+          setLoading(false);
+        }
       }
-    }
+    };
+    
+    checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchUserProfile]);
+  
+  const refreshUserData = useCallback(async () => {
+    await fetchUserProfile();
   }, [fetchUserProfile]);
   
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const response = await authApi.login({ email, password });
-
-      saveAuthState(true);
+      const userData = await authApi.login({ email, password });
+      
+      setCurrentUser(email);
       setIsAuthenticated(true);
       
-      const basicUserData = { email };
-      setUser(basicUserData);
-      
       try {
-        const profileData = await userApi.getUserProfile();
-        saveUserData(profileData);
-        setUser(profileData);
+        await refreshUserData();
       } catch (profileError) {
         console.error('Failed to fetch user profile after login:', profileError);
-        saveUserData(basicUserData);
+        
+        setUser({
+          email,
+          name: userData.name || '',
+          profile_picture: userData.profile_picture || null
+        });
       }
       
-      return response;
+      return userData;
     } catch (error) {
       console.error('Login failed:', error);
+      setIsAuthenticated(false);
+      setUser(null);
       throw error;
     }
-  }, []);
+  }, [refreshUserData]);
   
   const signup = useCallback(async (name: string, email: string, password: string) => {
     try {
@@ -93,16 +134,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     clearAuthState();
     setIsAuthenticated(false);
     setUser(null);
+    
     queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEY] });
     queryClient.removeQueries({ queryKey: ['userProfile'] });
+    
+    console.log('User logged out');
   }, [queryClient]);
   
-  const value: AuthContextType = {
+  const value = {
     login,
     signup,
     logout,
     isAuthenticated,
     user,
+    loading,
+    refreshUserData,
   };
   
   return (

@@ -7,7 +7,7 @@ import { EmailForm } from "./components/EmailForm";
 import { OtpVerification } from "./components/OtpVerification";
 import { ResetPasswordForm } from "./components/ResetPasswordForm";
 import { SuccessMessage } from "./components/SuccessMessage";
-import { useSendOtpMutation, useVerifyOtpMutation, useResetPasswordMutation } from "@/app/services/auth";
+import { useSendOtpMutation, useVerifyOtpMutation, useCreatePasswordMutation } from "@/app/services/auth";
 
 type PasswordResetStage = "email" | "otp" | "reset" | "success";
 
@@ -74,15 +74,14 @@ export default function PasswordReset() {
     }
   };
 
-  const resetPasswordMutation = useResetPasswordMutation();
+  const createPasswordMutation = useCreatePasswordMutation();
   
-  const handlePasswordReset = async (password: string, oldPassword: string) => {
+  const handlePasswordReset = async (password: string) => {
     setIsSubmitting(true);
     try {
-      await resetPasswordMutation.mutateAsync({
+      await createPasswordMutation.mutateAsync({
         email,
         newPassword: password,
-        oldPassword,
       });
       
       toast.success("Password reset successfully", {

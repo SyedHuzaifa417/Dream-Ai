@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useSignupMutation } from "@/app/services/auth";
+import { useAuth } from "@/app/services/auth/authContext";
 
 const signUpSchema = z
   .object({
@@ -38,16 +39,15 @@ export default function SignUp() {
     resolver: zodResolver(signUpSchema),
   });
 
-  const signUpMutation = useSignupMutation();
-  const isSubmitting = signUpMutation.isPending;
+  const { signup } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async (data: SignUpForm) => {
     try {
-      await signUpMutation.mutateAsync({
-        email: data.email,
-        name: data.name,
-        password: data.password,
-      });
+      setIsSubmitting(true);
+      
+ 
+      await signup(data.name, data.email, data.password);
 
       toast.success("Account created successfully!", {
         position: "bottom-right",
@@ -61,6 +61,8 @@ export default function SignUp() {
         position: "bottom-right",
         duration: 3000,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

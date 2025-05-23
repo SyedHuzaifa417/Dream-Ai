@@ -24,11 +24,13 @@ export default function SettingsPanel({
   onGenerate,
   isPromptValid = true,
   onSettingsChange,
+  hasGenerated = false,
 }: {
   type?: string;
   onGenerate?: () => void;
   isPromptValid?: boolean;
   onSettingsChange?: (settings: any) => void;
+  hasGenerated?: boolean;
 }) {
   const [autoTitle, setAutoTitle] = useState(false);
   const [autoDescription, setAutoDescription] = useState(false);
@@ -114,17 +116,6 @@ export default function SettingsPanel({
       });
       return;
     }
-
-    console.log("Generation settings:", {
-      type,
-      style: selectedStyle,
-      aspectRatio: selectedAspectRatio,
-      autoTitle,
-      autoDescription,
-      guidanceScale,
-      inferenceSteps,
-      excludeText,
-    });
 
     if (onGenerate) {
       onGenerate();
@@ -263,7 +254,7 @@ export default function SettingsPanel({
       <Button
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm uppercase font-medium"
         onClick={handleGenerate}
-        // disabled={!isPromptValid}
+        disabled={!isPromptValid || hasGenerated}
       >
         Generate
       </Button>

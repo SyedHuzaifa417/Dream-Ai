@@ -1,15 +1,13 @@
 import axios from 'axios';
-import { getAuthState } from '../auth/authApi';
+import { getCurrentUserEmail, getAuthHeaders } from '../auth/authApi';
+import {  SubscriptionInfo, UserUsage } from '../auth/authApi';
 
 export interface UserProfile {
   email: string;
-  image_count: number;
   name: string;
   profile_picture: string | null;
-  subscription_end_date: string | null;
-  subscription_plan: string | null;
-  subscription_start_date: string | null;
-  video_count: number;
+  usage: UserUsage;
+  subscription: SubscriptionInfo;
 }
 
 export interface PaymentHistory {
@@ -36,8 +34,10 @@ export interface AddSubscriptionPlanRequest {
   subscription_plan: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -45,38 +45,37 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const { isAuthenticated } = getAuthState();
-    if (isAuthenticated) {
-      config.headers['X-Authenticated'] = 'true';
-    }
+    const headers = getAuthHeaders();
+    Object.keys(headers).forEach(key => {
+      config.headers[key] = headers[key];
+    });
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-const getUserEmail = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
-    return userData?.email || null;
-  } catch (error) {
-    console.error('Failed to get user email:', error);
-    return null;
-  }
-};
+function getUserEmail(): string | null {
+  return getCurrentUserEmail();
+}
 
 export const userApi = {
+
   getUserProfile: async (): Promise<UserProfile> => {
+    const email = getUserEmail();
+    if (!email) {
+      throw new Error('User not authenticated');
+    }
+    
     try {
-      const email = getUserEmail();
-      if (!email) {
-        throw new Error('User email not found');
-      }
+      const headers = getAuthHeaders();
+      console.log('Fetching user profile with headers:', headers);
       
-      const response = await api.get(`/users/${encodeURIComponent(email)}`);
+      const response = await api.get(`/users/${email}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
       throw error;
     }
   },
@@ -110,11 +109,10 @@ export const userApi = {
     }
     
     const formData = new FormData();
-    formData.append('email', email);
     formData.append('profile_picture', imageFile);
     
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload_profile_picture`, 
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${encodeURIComponent(email)}/profile-picture`, 
       formData,
       {
         headers: {

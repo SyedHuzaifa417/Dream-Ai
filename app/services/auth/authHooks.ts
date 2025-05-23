@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import {  VerifyOtpRequest, ResetPasswordRequest, authApi, clearAuthState } from './authApi';
+import {  VerifyOtpRequest, ResetPasswordRequest, CreatePasswordRequest, authApi, clearAuthState } from './authApi';
 import { useAuth } from './authContext';
 
 export const useLoginMutation = () => {
@@ -77,6 +77,20 @@ export const useResetPasswordMutation = () => {
     },
     onError: (error) => {
       console.error('Password reset error:', error);
+    }
+  });
+};
+
+export const useCreatePasswordMutation = () => {
+  return useMutation({
+    mutationFn: async ({ email, newPassword }: { email: string; newPassword: string }) => {
+      const createPasswordData: CreatePasswordRequest = {
+        new_password: newPassword
+      };
+      return authApi.createPassword(email, createPasswordData);
+    },
+    onError: (error) => {
+      console.error('Create password error:', error);
     }
   });
 };

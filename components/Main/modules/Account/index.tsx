@@ -4,7 +4,7 @@ import React from "react";
 import AccountForm, { AccountFormData } from "./components/AccountForm";
 import DeleteForm from "./components/DeleteForm";
 import SubscriptionForm from "./components/SubscriptionForm";
-import { useAuth } from "@/app/services/auth";
+import { useAuth } from "@/app/services/auth/authContext";
 
 const AccountPage = () => {
   const { user, isAuthenticated, logout } = useAuth();

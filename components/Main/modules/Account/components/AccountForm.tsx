@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useUserProfile, useUploadProfilePicture, useRemoveProfilePicture } from "@/app/services/user/userHooks";
 import { X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/app/services/auth";
+import { useAuth } from "@/app/services/auth/authContext";
 
 type ProfileChangeAction = 'NONE' | 'UPLOAD' | 'REMOVE';
 
