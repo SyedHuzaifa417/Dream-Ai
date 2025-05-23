@@ -24,7 +24,7 @@ export default function ImagesGenerationPage() {
     excludeText: "",
   });
 
-const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateSettings = useCallback((newSettings: any) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
@@ -70,7 +70,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <div className="relative">
             <Input
               placeholder="Type a prompt here - Example: fantasy world, amazing day view, by going home from school, anime, cinematic shot third person view."
-              className="w-full pl-4 pr-12 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700 text-base"
+              className="w-full pl-4 pr-20 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700 text-base"
               value={prompt}
               onChange={handlePromptChange}
             />
@@ -82,8 +82,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
               onChange={handleImageUpload}
               className="hidden"
             />
-               {!uploadedImage && (
-              <span 
+            {!uploadedImage && (
+              <span
                 className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800 bg-transparent cursor-pointer hover:text-gray-600"
                 onClick={handleImageClick}
               >
@@ -93,10 +93,10 @@ const fileInputRef = useRef<HTMLInputElement>(null);
             {uploadedImage && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <div className="relative w-10 h-10">
-                  <div className="w-10 h-10 rounded-md overflow-hidden">
-                    <Image 
-                      src={URL.createObjectURL(uploadedImage)} 
-                      alt="Uploaded image" 
+                  <div className=" rounded-md overflow-hidden">
+                    <Image
+                      src={URL.createObjectURL(uploadedImage)}
+                      alt="Uploaded image"
                       className="object-cover w-10 h-10"
                       width={40}
                       height={40}
@@ -111,7 +111,6 @@ const fileInputRef = useRef<HTMLInputElement>(null);
                 </div>
               </div>
             )}
-        
           </div>
         </div>
 
@@ -120,7 +119,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
             <SettingsPanel
               type="image"
               onGenerate={handleGenerate}
-              isPromptValid={prompt.trim() !== "" || uploadedImage !== null}
+              isPromptValid={prompt.trim() !== ""}
               onSettingsChange={updateSettings}
               hasGenerated={hasGenerated}
             />

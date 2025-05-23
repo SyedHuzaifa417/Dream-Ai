@@ -69,7 +69,7 @@ export default function VideoPage() {
           <div className="relative">
             <Input
               placeholder="Type a prompt here - Example: waterfall, nature video, cinematic landscape, timelapse video..."
-              className="w-full pl-4 pr-12 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700"
+              className="w-full pl-4 pr-20 py-8 max-sm:py-6 rounded-xl border-[#e5e7eb] bg-white text-gray-700"
               value={prompt}
               onChange={handlePromptChange}
             />
@@ -81,8 +81,8 @@ export default function VideoPage() {
               onChange={handleImageUpload}
               className="hidden"
             />
-               {!uploadedImage && (
-              <span 
+            {!uploadedImage && (
+              <span
                 className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-gray-800 bg-transparent cursor-pointer hover:text-gray-600"
                 onClick={handleImageClick}
               >
@@ -93,9 +93,9 @@ export default function VideoPage() {
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <div className="relative w-10 h-10">
                   <div className="w-10 h-10 rounded-md overflow-hidden relative">
-                    <Image 
-                      src={URL.createObjectURL(uploadedImage)} 
-                      alt="Uploaded image" 
+                    <Image
+                      src={URL.createObjectURL(uploadedImage)}
+                      alt="Uploaded image"
                       className="object-cover"
                       fill
                     />
@@ -109,7 +109,6 @@ export default function VideoPage() {
                 </div>
               </div>
             )}
-           
           </div>
         </div>
 
@@ -118,7 +117,7 @@ export default function VideoPage() {
             <SettingsPanel
               type="video"
               onGenerate={handleGenerate}
-              isPromptValid={prompt.trim() !== "" || uploadedImage !== null}
+              isPromptValid={prompt.trim() !== ""}
               onSettingsChange={updateSettings}
               hasGenerated={hasGenerated}
             />

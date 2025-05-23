@@ -1,6 +1,6 @@
 "use client";
 
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,15 @@ const SubscriptionForm: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
-  
+
   const handleCancelSubscription = async () => {
     try {
       setCancelling(true);
       const result = await cancelSubscription();
-      
-      if (result.status === 'success') {
+
+      if (result.status === "success") {
         toast.success(result.message || "Subscription cancelled successfully");
-        router.push('/subscriptions');
+        router.push("/subscriptions");
       } else {
         toast.error(result.message || "Failed to cancel subscription");
       }
@@ -46,7 +46,11 @@ const SubscriptionForm: React.FC = () => {
             <h3 className="text-xl font-medium text-white mb-4">Package</h3>
             <div className="flex items-center justify-between">
               <Input
-                value={ user?.subscription?.plan ?`${user?.subscription.plan} (${user?.subscription.duration})` : "No Active Plan"}
+                value={
+                  user?.subscription?.plan
+                    ? `${user?.subscription.plan} (${user?.subscription.duration})`
+                    : "No Active Plan"
+                }
                 className="border-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 bg-inherit text-white p-5"
                 readOnly
               />
@@ -59,7 +63,11 @@ const SubscriptionForm: React.FC = () => {
             <h3 className="text-xl font-medium text-white mb-4">Price</h3>
             <div className="flex items-center justify-between">
               <Input
-                value={user?.subscription?.limits?.price ? `$${user.subscription?.limits?.price}` : "--"}
+                value={
+                  user?.subscription?.limits?.price
+                    ? `$${user.subscription?.limits?.price}`
+                    : "--"
+                }
                 className="border-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 bg-inherit text-white p-5"
                 readOnly
               />
@@ -123,10 +131,14 @@ const SubscriptionForm: React.FC = () => {
         <Button
           type="button"
           className="px-10 border border-red-500 text-red-500 bg-transparent py-5 rounded-lg hover:bg-red-500/10 transition-all w-max max-lg:w-full mt-4 lg:mt-0"
-          disabled={!isAuthenticated || !user?.subscription?.status || cancelling}
+          disabled={
+            !isAuthenticated || !user?.subscription?.status || cancelling
+          }
           onClick={handleCancelSubscription}
         >
-          {cancelling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+          {cancelling ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : null}
           {cancelling ? "Processing..." : "Cancel Subscription"}
         </Button>
       </div>

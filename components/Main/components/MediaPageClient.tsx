@@ -1,10 +1,18 @@
 "use client";
 
-import {  useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { generateImage, generateVideo, generateImageToImage, generateImageToVideo, downloadMedia, shareMedia, postMedia } from "@/app/services/media";
+import {
+  generateImage,
+  generateVideo,
+  generateImageToImage,
+  generateImageToVideo,
+  downloadMedia,
+  shareMedia,
+  postMedia,
+} from "@/app/services/media";
 import { getCurrentUserEmail } from "@/app/services/auth/authApi";
 
 type MediaData = {
@@ -54,21 +62,21 @@ export function MediaPageClient({
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     setErrorMessage(null);
-    
+
     let remainingTime = 120;
     setTimeRemaining(remainingTime);
-    
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     timerRef.current = setInterval(() => {
       remainingTime -= 1;
       setTimeRemaining(remainingTime);
-      
+
       if (remainingTime <= 0 && timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -113,21 +121,21 @@ export function MediaPageClient({
             num_inference_steps: settings.inferenceSteps || 28,
             guidance: settings.guidanceScale ? settings.guidanceScale / 10 : 5,
             output_quality: 90,
-            prompt_strength: 0.8
+            prompt_strength: 0.8,
           });
         } else {
           // Use text-to-image if no image is provided
           response = await generateImage(prompt, {
-          // guidanceScale: settings.guidanceScale,
-          // inferenceSteps: settings.inferenceSteps,
-          // excludeText: settings.excludeText,
-          // style: settings.style,
-          // aspectRatio: settings.aspectRatio
+            // guidanceScale: settings.guidanceScale,
+            // inferenceSteps: settings.inferenceSteps,
+            // excludeText: settings.excludeText,
+            // style: settings.style,
+            // aspectRatio: settings.aspectRatio
             num_inference_steps: settings.inferenceSteps || 4,
             seed: Math.floor(Math.random() * 4294967295),
             autoTitle: settings.autoTitle,
             autoDescription: settings.autoDescription,
-            aspectRatio: mappedAspectRatio
+            aspectRatio: mappedAspectRatio,
           });
         }
       } else {
@@ -139,7 +147,9 @@ export function MediaPageClient({
             autoDescription: settings.autoDescription,
             fast_mode: "Balanced",
             sample_steps: settings.inferenceSteps || 30,
-            sample_guide_scale: settings.guidanceScale ? Math.round(settings.guidanceScale / 5) : 5
+            sample_guide_scale: settings.guidanceScale
+              ? Math.round(settings.guidanceScale / 5)
+              : 5,
           });
         } else {
           // Use text-to-video if no image is provided
@@ -147,7 +157,7 @@ export function MediaPageClient({
             aspect_ratio: "16:9",
             autoTitle: settings.autoTitle,
             autoDescription: settings.autoDescription,
-            fast_mode: "Balanced"
+            fast_mode: "Balanced",
           });
         }
       }
@@ -179,7 +189,9 @@ export function MediaPageClient({
       }
     } catch (error) {
       console.error("Error generating media:", error);
-      setErrorMessage("Failed to generate media. The subscription plan may be expired");
+      setErrorMessage(
+        "Failed to generate media. The subscription plan may be expired"
+      );
       setIsLoading(false);
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -191,11 +203,9 @@ export function MediaPageClient({
     }
   };
 
-  
   useEffect(() => {
     generateMedia();
-    
-  
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -244,13 +254,15 @@ export function MediaPageClient({
       const result = await shareMedia(mediaData.url, "social");
 
       if (result.success) {
-        toast.success(
-          `${type.charAt(0).toUpperCase() + type.slice(1)} shared!`,
-          {
-            position: "bottom-right",
-            duration: 3000,
-          }
-        );
+        setTimeout(() => {
+          toast.success(
+            `${type.charAt(0).toUpperCase() + type.slice(1)} shared!`,
+            {
+              position: "bottom-right",
+              duration: 3000,
+            }
+          );
+        }, 3000);
       } else {
         throw new Error("Sharing failed");
       }
@@ -263,31 +275,31 @@ export function MediaPageClient({
     }
   };
 
-  const handlePostTo = async () => {
-    if (!mediaData) return;
+  // const handlePostTo = async () => {
+  //   if (!mediaData) return;
 
-    try {
-      const result = await postMedia(mediaData.url, type, [
-        "instagram",
-        "twitter",
-      ]);
+  //   try {
+  //     const result = await postMedia(mediaData.url, type, [
+  //       "instagram",
+  //       "twitter",
+  //     ]);
 
-      if (result.success) {
-        toast.success(`Ready to post ${type}!`, {
-          position: "bottom-right",
-          duration: 3000,
-        });
-      } else {
-        throw new Error("Posting failed");
-      }
-    } catch (error) {
-      console.error("Error posting media:", error);
-      toast.error(`Failed to prepare ${type} for posting`, {
-        position: "bottom-right",
-        duration: 3000,
-      });
-    }
-  };
+  //     if (result.success) {
+  //       toast.success(`Ready to post ${type}!`, {
+  //         position: "bottom-right",
+  //         duration: 3000,
+  //       });
+  //     } else {
+  //       throw new Error("Posting failed");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error posting media:", error);
+  //     toast.error(`Failed to prepare ${type} for posting`, {
+  //       position: "bottom-right",
+  //       duration: 3000,
+  //     });
+  //   }
+  // };
 
   if (isLoading) {
     return (
